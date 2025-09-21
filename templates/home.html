@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inicio - Análisis Numérico{% endblock %}
+
+{% block content %}
+<div class="hero-section bg-primary text-white py-5 mb-3 mt-1">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold mb-3">
+            <i class="fas fa-calculator"></i> Análisis Numérico
+        </h1>
+        <p class="lead mb-4">Herramientas interactivas para el aprendizaje de métodos numéricos</p>
+        <a href="#capitulos" class="btn btn-light btn-lg">
+            <i class="fas fa-arrow-down"></i> Explorar Capítulos
+        </a>
+    </div>
+</div>
+
+<div class="container" id="capitulos">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h2 class="display-5 mb-3">Capítulos Disponibles</h2>
+            <p class="lead text-muted">Selecciona un capítulo para comenzar a explorar los métodos numéricos</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Capítulo 1 -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm border-0 card-hover">
+                <div class="card-header bg-success text-white text-center">
+                    <i class="fas fa-square-root-alt fa-2x mb-2"></i>
+                    <h5 class="mb-0">Capítulo 1</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title">Soluciones de Ecuaciones No Lineales</h6>
+                    <p class="card-text flex-grow-1">
+                        Métodos para encontrar raíces de ecuaciones no lineales incluyendo bisección, 
+                        Newton-Raphson, secante y más.
+                    </p>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-tools"></i> 6 métodos disponibles
+                        </small>
+                    </div>
+                    <a href="{% url 'capitulo1:index' %}" class="btn btn-success">
+                        <i class="fas fa-play"></i> Comenzar
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Capítulo 2 -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-secondary text-white text-center">
+                    <i class="fas fa-table fa-2x mb-2"></i>
+                    <h5 class="mb-0">Capítulo 2</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title">Próximamente</h6>
+                    <p class="card-text flex-grow-1">
+                        Este capítulo estará disponible pronto con nuevos métodos numéricos.
+                    </p>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i> En desarrollo
+                        </small>
+                    </div>
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-lock"></i> Próximamente
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Capítulo 3 -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-secondary text-white text-center">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                    <h5 class="mb-0">Capítulo 3</h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title">Próximamente</h6>
+                    <p class="card-text flex-grow-1">
+                        Este capítulo estará disponible pronto con nuevos métodos numéricos.
+                    </p>
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i> En desarrollo
+                        </small>
+                    </div>
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-lock"></i> Próximamente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Capítulo 1: Ecuaciones No Lineales{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header del capítulo -->
+    <div class="row bg-dark text-white py-5 mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-6 mb-2">Capítulo 1</h1>
+            <p class="lead mb-0">Soluciones de Ecuaciones No Lineales</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+                <li class="breadcrumb-item active">Capítulo 1</li>
+            </ol>
+        </nav>
+        
+        <!-- Introducción -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card border-0 bg-light">
+                    <div class="card-body p-4">
+                        <h3 class="text-dark mb-3">Introducción</h3>
+                        <p class="text-muted mb-0">
+                            Métodos numéricos para encontrar raíces de ecuaciones no lineales. 
+                            Estos algoritmos permiten resolver f(x) = 0 cuando no existen soluciones analíticas.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Métodos disponibles -->
+        <div class="row g-4">
+            <!-- Bisección -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title text-primary mb-3">Método de Bisección</h5>
+                        <p class="card-text text-muted mb-3">
+                            Divide repetidamente un intervalo por la mitad. Convergencia garantizada.
+                        </p>
+                        <a href="{% url 'capitulo1:biseccion' %}" class="btn btn-outline-primary">
+                            Usar Método
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Regla Falsa -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title text-primary mb-3">Regla Falsa</h5>
+                        <p class="card-text text-muted mb-3">
+                            Interpolación lineal para encontrar raíces. Más eficiente que bisección.
+                        </p>
+                        <a href="{% url 'capitulo1:reglafalsa' %}" class="btn btn-outline-primary">
+                            Usar Método
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Punto Fijo -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title text-primary mb-3">Punto Fijo</h5>
+                        <p class="card-text text-muted mb-3">
+                            Transforma f(x) = 0 en x = g(x). Convergencia condicional.
+                        </p>
+                        <a href="{% url 'capitulo1:puntofijo' %}" class="btn btn-outline-primary">
+                            Usar Método
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Newton-Raphson -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title text-primary mb-3">Newton-Raphson</h5>
+                        <p class="card-text text-muted mb-3">
+                            Usa la derivada para convergencia rápida. Requiere calcular f'(x).
+                        </p>
+                        <a href="{% url 'capitulo1:newton' %}" class="btn btn-outline-primary">
+                            Usar Método
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Secante -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title text-primary mb-3">Método de la Secante</h5>
+                        <p class="card-text text-muted mb-3">
+                            Aproxima la derivada. No requiere calcular f'(x) directamente.
+                        </p>
+                        <a href="{% url 'capitulo1:secante' %}" class="btn btn-outline-primary">
+                            Usar Método
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Raíces Múltiples -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title text-primary mb-3">Raíces Múltiples</h5>
+                        <p class="card-text text-muted mb-3">
+                            Newton-Raphson modificado para raíces con multiplicidad > 1.
+                        </p>
+                        <a href="{% url 'capitulo1:raicesmultiples' %}" class="btn btn-outline-primary">
+                            Usar Método
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
