@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Método de la Secante</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .description {
+            background-color: #e8f4f8;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #34495e;
+        }
+        form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        small {
+            display: block;
+            margin-top: 4px;
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .checkbox-group label {
+            margin: 0;
+            font-weight: normal;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .mensaje {
+            padding: 12px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .mensaje.success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        .mensaje.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        table {
+            width: 100%;
+            background-color: white;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        h2, h3 {
+            color: #2c3e50;
+            margin: 20px 0 10px 0;
+            font-size: 18px;
+        }
+        .grafico {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .grafico img {
+            max-width: 100%;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Método de la Secante</h1>
+    <div class="description">
+        <p>Similar a Newton-Raphson pero usa una aproximación de la derivada mediante diferencias finitas.</p>
+        <p><strong>Nota:</strong> Este método requiere dos valores iniciales cercanos a la raíz.</p>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="f">Función f(x):</label>
+            <input type="text" id="f" name="f" 
+                   placeholder="Ejemplo: x**4 - 5*x + 5" 
+                   value="{{ funcion }}" required>
+            <small>Use ** para potencias, * para multiplicación</small>
+        </div>
+
+        <div class="form-group">
+            <label for="x0">Primer valor inicial (x0):</label>
+            <input type="number" id="x0" name="x0" step="any" 
+                   value="{{ x0 }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="x1">Segundo valor inicial (x1):</label>
+            <input type="number" id="x1" name="x1" step="any" 
+                   value="{{ x1 }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="tol">Tolerancia:</label>
+            <input type="number" id="tol" name="tol" step="any" 
+                   value="{{ tol|default:'1e-7' }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="niter">Número máximo de iteraciones:</label>
+            <input type="number" id="niter" name="niter" 
+                   value="{{ niter|default:'100' }}" required>
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="usar_cifras" name="usar_cifras">
+            <label for="usar_cifras">Usar error de cifras significativas</label>
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="comparar" name="comparar">
+            <label for="comparar">Comparar con otros métodos</label>
+        </div>
+
+        <button type="submit">Calcular</button>
+    </form>
+
+    {% if resultado %}
+    <div class="mensaje success">
+        <p>{{ mensaje }}</p>
+    </div>
+
+    <h3>Tabla de iteraciones</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Iteración</th>
+                <th>xn</th>
+                <th>f(xn)</th>
+                <th>Error</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for iter, xn, fxn, error in tabla %}
+            <tr>
+                <td>{{ iter }}</td>
+                <td>{{ xn }}</td>
+                <td>{{ fxn }}</td>
+                <td>{{ error|default:"N/A" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if grafico %}
+    <div class="grafico">
+        <h3>Gráfico de la función</h3>
+        <img src="data:image/png;base64,{{ grafico }}" alt="Gráfico">
+    </div>
+    {% endif %}
+
+    {% if resultados_comparativos %}
+    <h3>Comparación con otros métodos</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Método</th>
+                <th>Raíz (xs)</th>
+                <th>Iteraciones (n)</th>
+                <th>Error</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for res in resultados_comparativos %}
+            <tr>
+                <td>{{ res.metodo }}</td>
+                <td>{{ res.xs }}</td>
+                <td>{{ res.n }}</td>
+                <td>{{ res.error }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    {% elif mensaje %}
+    <div class="mensaje error">
+        <p>{{ mensaje }}</p>
+    </div>
+    {% endif %}
+</body>
+</html>
