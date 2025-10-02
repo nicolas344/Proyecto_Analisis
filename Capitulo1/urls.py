@@ -6,10 +6,10 @@ app_name = 'capitulo1'
 
 urlpatterns = [
     path('', views.capitulo1_index, name='index'),
-    path('biseccion/', views.biseccion, name='biseccion'),
-    path('reglafalsa/', views.reglafalsa, name='reglafalsa'),
-    path('puntofijo/', views.puntofijo, name='puntofijo'),
-    path('newton/', views.newton, name='newton'),
-    path('secante/', views.secante, name='secante'),
-    path('raicesmultiples/', views.raicesmultiples, name='raicesmultiples'),
+    path('biseccion/', views.biseccion_view, name='biseccion'),
+    path('reglafalsa/', views.regla_falsa_view, name='reglafalsa'),
+    path('puntofijo/', views.punto_fijo_view, name='puntofijo'),
+    path('newton/', views.newton_view, name='newton'),
+    path('secante/', views.secante_view, name='secante'),
+    path('raicesmultiples/', views.raices_multiples_view, name='raicesmultiples'),
 ]
