@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'Capitulo1',  # Agrega esta línea
+    'Capitulo1',
+    'Capitulo2',
+    'Capitulo3',
 ]
 
 MIDDLEWARE = [

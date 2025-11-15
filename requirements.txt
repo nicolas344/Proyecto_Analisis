@@ -1,0 +1,6 @@
+django
+numpy
+sympy
+matplotlib
+gunicorn
+whitenoise

@@ -22,4 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', TemplateView.as_view(template_name='home.html'), name='home'),
     path('capitulo1/', include('Capitulo1.urls', namespace='capitulo1')),
+    path('capitulo2/', include('Capitulo2.urls', namespace='capitulo2')),
+    path('capitulo3/', include('Capitulo3.urls', namespace='capitulo3')),
 ]
