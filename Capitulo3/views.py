@@ -40,7 +40,7 @@ def vandermonde_view(request):
                 messages.error(request, "Debes ingresar al menos 2 puntos.")
                 return render(request, 'vandermonde.html', {'x_vals': x_vals, 'y_vals': y_vals, 'num_puntos': num_puntos})
 
-            a, poly_str, xpol, p, mensaje_error = vandermonde_interpolation(x, y)
+            a, poly_str, xpol, p = vandermonde_interpolation(x, y)
             image_base64 = graficar(x, y, xpol, p)
 
             comparar = request.POST.get('comparar') == 'on'
@@ -58,7 +58,6 @@ def vandermonde_view(request):
             return render(request, 'vandermonde.html', {
                 'poly_str': poly_str,
                 'image_base64': image_base64,
-                'mensaje_error': mensaje_error,
                 'x_vals': x_vals,
                 'y_vals': y_vals,
                 'num_puntos': num_puntos,
@@ -110,7 +109,7 @@ def newton_int_view(request):
                 messages.error(request, "Debes ingresar al menos 2 puntos.")
                 return render(request, 'newton_int.html', {'x_vals': x_vals, 'y_vals': y_vals, 'num_puntos': num_puntos})
 
-            a, poly_str, xpol, p, mensaje_error = newton_interpolation(x, y)
+            a, poly_str, xpol, p = newton_interpolation(x, y)
             image_base64 = graficar(x, y, xpol, p)
 
             comparar = request.POST.get('comparar') == 'on'
@@ -128,7 +127,6 @@ def newton_int_view(request):
             return render(request, 'newton_int.html', {
                 'poly_str': poly_str,
                 'image_base64': image_base64,
-                'mensaje_error': mensaje_error,
                 'x_vals': x_vals,
                 'y_vals': y_vals,
                 'num_puntos': num_puntos,
@@ -179,7 +177,7 @@ def lagrange_view(request):
                 messages.error(request, "Debes ingresar al menos 2 puntos.")
                 return render(request, 'lagrange.html', {'x_vals': x_vals, 'y_vals': y_vals, 'num_puntos': num_puntos})
 
-            poly_str, xpol, p, mensaje_error = lagrange_interpolation(x, y)
+            poly_str, xpol, p = lagrange_interpolation(x, y)
             image_base64 = graficar(x, y, xpol, p)
 
             comparar = request.POST.get('comparar') == 'on'
@@ -197,7 +195,6 @@ def lagrange_view(request):
             return render(request, 'lagrange.html', {
                 'poly_str': poly_str,
                 'image_base64': image_base64,
-                'mensaje_error': mensaje_error,
                 'x_vals': x_vals,
                 'y_vals': y_vals,
                 'num_puntos': num_puntos,
@@ -253,7 +250,7 @@ def spline_view(request):
                 messages.error(request, "Debes ingresar al menos 2 puntos.")
                 return render(request, 'spline.html', {'x_vals': x_vals, 'y_vals': y_vals, 'num_puntos': num_puntos})
 
-            poly_str, xpol, p, mensaje_error = spline_interpolation(x, y, tipo_spline)
+            poly_str, xpol, p = spline_interpolation(x, y, tipo_spline)
             image_base64 = graficar(x, y, xpol, p)
 
             comparar = request.POST.get('comparar') == 'on'
@@ -272,7 +269,6 @@ def spline_view(request):
             return render(request, 'spline.html', {
                 'poly_str': poly_str,
                 'image_base64': image_base64,
-                'mensaje_error': mensaje_error,
                 'x_vals': x_vals,
                 'y_vals': y_vals,
                 'num_puntos': num_puntos,

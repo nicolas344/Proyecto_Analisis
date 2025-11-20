@@ -91,15 +91,8 @@
         <p><strong>Spline calculado exitosamente</strong></p>
     </div>
 
-    <h3 class="mb-3">Polinomios por Tramos</h3>
+    <h3 class="mb-3">Polinomios por Tramos (Spline {{ tipo_spline|title }})</h3>
     <div class="bg-light p-3 rounded mb-4" style="font-family: monospace; overflow-x: auto; white-space: pre-wrap; word-break: break-all;">{{ poly_str }}</div>
-
-    {% if mensaje_error %}
-    <h3 class="mb-3">Validación del Método</h3>
-    <div class="alert alert-success">
-        {{ mensaje_error }}
-    </div>
-    {% endif %}
 
     {% if image_base64 %}
     <div class="text-center my-4">
@@ -115,7 +108,6 @@
             <thead class="table-light">
                 <tr>
                     <th>Método</th>
-                    <th>Error Puntual</th>
                     <th>Error Abs Promedio</th>
                     <th>Error Rel Promedio</th>
                     <th>Error Abs Máx</th>
@@ -127,11 +119,10 @@
                 {% for res in resultados_comparacion %}
                 <tr {% if res.mejor %}class="table-success fw-bold"{% endif %}>
                     <td>{{ res.metodo }}</td>
-                    <td>{{ res.error_puntual|floatformat:6 }}</td>
-                    <td>{{ res.error_absoluto|floatformat:6 }}</td>
-                    <td>{{ res.error_relativo|floatformat:6 }}</td>
-                    <td>{{ res.error_abs_max|floatformat:6 }}</td>
-                    <td>{{ res.error_rel_max|floatformat:6 }}</td>
+                    <td>{{ res.error_absoluto|stringformat:".6e" }}</td>
+                    <td>{{ res.error_relativo|stringformat:".6e" }}</td>
+                    <td>{{ res.error_abs_max|stringformat:".6e" }}</td>
+                    <td>{{ res.error_rel_max|stringformat:".6e" }}</td>
                     <td>
                         {% if res.mejor %}
                             <span class="text-success">✓ Mejor método</span>
@@ -145,8 +136,7 @@
         </table>
     </div>
     <p class="text-muted small">
-        <strong>Criterio:</strong> El mejor método es el que tiene menor error puntual al eliminar un punto de prueba.
-        Los errores promedio y máximos se calculan evaluando el polinomio en todos los puntos originales.
+        <strong>💡 Criterio:</strong> El mejor método es el que tiene menor error absoluto promedio al evaluar el polinomio en todos los puntos originales.
     </p>
     {% endif %}
     
@@ -157,7 +147,6 @@
             <thead class="table-light">
                 <tr>
                     <th>Tipo de Error</th>
-                    <th>Error Puntual</th>
                     <th>Error Promedio</th>
                     <th>Error Máximo</th>
                     <th>Estado</th>
@@ -167,7 +156,6 @@
                 {% for res in resultados_errores %}
                 <tr {% if res.mejor %}class="table-success fw-bold"{% endif %}>
                     <td>{{ res.tipo_error }}</td>
-                    <td>{{ res.error_puntual|floatformat:6 }}</td>
                     <td>{{ res.error_promedio|stringformat:".6e" }}</td>
                     <td>{{ res.error_max|stringformat:".6e" }}</td>
                     <td>
