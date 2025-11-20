@@ -7,12 +7,11 @@
 {% block content %}
 
 <div class="container py-4">
-    <h2 class="mb-4">Método SOR</h2>
+    <h2 class="mb-4 fw-bold">Método SOR</h2>
 
     <form method="POST">
         {% csrf_token %}
 
-        
         <div class="mb-3">
             <label class="fw-bold">Tamaño de la matriz A (n × n)</label>
             <input type="number" name="matrix_size" min="2" value="{{ matrix_size }}" class="form-control">
@@ -20,7 +19,6 @@
 
         <hr>
 
-        
         <h5 class="fw-bold mb-3">Matriz A</h5>
 
         {% for i in range %}
@@ -28,10 +26,11 @@
                 {% for j in range %}
                     <div class="col">
                         <input 
-                            type="text" 
+                            type="text"
                             step="any"
                             class="form-control"
                             name="a_{{ i }}_{{ j }}"
+                            placeholder="A{{ i }}{{ j }}"
                             value="{% if A %}{{ A|index:i|index:j }}{% endif %}">
                     </div>
                 {% endfor %}
@@ -40,7 +39,6 @@
 
         <hr>
 
-        
         <h5 class="fw-bold mb-3">Vector b</h5>
 
         <div class="row mb-3">
@@ -50,6 +48,7 @@
                         type="text"
                         class="form-control"
                         name="b_{{ i }}"
+                        placeholder="b{{ i }}"
                         value="{% if b %}{{ b|index:i }}{% endif %}">
                 </div>
             {% endfor %}
@@ -57,7 +56,6 @@
 
         <hr>
 
-        
         <h5 class="fw-bold mb-3">x₀ (Aproximación inicial)</h5>
 
         <div class="row mb-3">
@@ -67,6 +65,7 @@
                         type="text"
                         class="form-control"
                         name="x0_{{ i }}"
+                        placeholder="x₀{{ i }}"
                         value="{% if x0 %}{{ x0|index:i }}{% endif %}">
                 </div>
             {% endfor %}
@@ -74,7 +73,6 @@
 
         <hr>
 
-        
         <div class="row mb-3">
             <div class="col">
                 <label class="fw-bold">Tolerancia</label>
@@ -92,16 +90,22 @@
             </div>
         </div>
 
+        <hr>
+
         
+        <div class="mb-4">
+            <label class="fw-bold">Tipo de error</label>
+            <select name="error_type" class="form-select">
+                <option value="relative" {% if error_type == 'relative' %}selected{% endif %}>Error relativo</option>
+                <option value="absolute" {% if error_type == 'absolute' %}selected{% endif %}>Error absoluto</option>
+                <option value="condition" {% if error_type == 'condition' %}selected{% endif %}>Error condicional</option>
+            </select>
+        </div>
+
         <div class="row mb-4">
 
             <div class="col text-center">
-                <input type="checkbox" name="usar_cifras" {% if usar_cifras %}checked{% endif %}>
-                <label>Usar error relativo</label>
-            </div>
-
-            <div class="col text-center">
-                <input type="checkbox" name="comparar">
+                <input type="checkbox" name="comparar" {% if comparar %}checked{% endif %}>
                 <label>Comparar con otros métodos</label>
             </div>
 
@@ -121,6 +125,18 @@
         <div class="alert alert-info">{{ mensaje }}</div>
     {% endif %}
 
+    {% if rho is not None %}
+        <div class="alert alert-secondary mt-3">
+            <strong>Radio espectral ρ(T):</strong> {{ rho|floatformat:6 }} <br>
+
+            {% if converge %}
+                <span class="text-success fw-bold">✔ El método SÍ converge (ρ &lt; 1)</span>
+            {% else %}
+                <span class="text-danger fw-bold">✘ El método NO converge (ρ ≥ 1)</span>
+            {% endif %}
+        </div>
+    {% endif %}
+
     {% if tabla %}
         <h4 class="fw-bold">Tabla de Iteraciones</h4>
 
@@ -137,7 +153,15 @@
                     <tr>
                         <td>{{ fila.0 }}</td>
                         <td>{{ fila.1 }}</td>
-                        <td>{{ fila.2 }}</td>
+
+                        <!-- Mostrar N/A si el error es condicional -->
+                        <td>
+                            {% if error_type == "condition" %}
+                                N/A
+                            {% else %}
+                                {{ fila.2 }}
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
