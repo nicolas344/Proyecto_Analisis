@@ -251,8 +251,12 @@
             <tr>
                 <th>Método</th>
                 <th>Raíz (xs)</th>
-                <th>Iteraciones (n)</th>
-                <th>Error</th>
+                <th>Iteraciones</th>
+                <th>Error Final</th>
+                <th>Error Abs Prom</th>
+                <th>Error Rel Prom</th>
+                <th>Error Abs Máx</th>
+                <th>Error Rel Máx</th>
                 <th>Estado</th>
             </tr>
         </thead>
@@ -260,9 +264,13 @@
             {% for res in resultados_comparativos %}
             <tr {% if res.mejor %}style="background-color: #d4edda; font-weight: bold;"{% endif %}>
                 <td>{{ res.metodo }}</td>
-                <td>{{ res.xs }}</td>
+                <td>{{ res.xs|floatformat:6 }}</td>
                 <td>{{ res.n }}</td>
-                <td>{{ res.error }}</td>
+                <td>{{ res.error|floatformat:6 }}</td>
+                <td>{{ res.error_abs_promedio|floatformat:6 }}</td>
+                <td>{{ res.error_rel_promedio|floatformat:6 }}</td>
+                <td>{{ res.error_abs_max|floatformat:6 }}</td>
+                <td>{{ res.error_rel_max|floatformat:6 }}</td>
                 <td>
                     {% if res.mejor %}
                         <span style="color: #28a745;">✓ Mejor método</span>
@@ -277,7 +285,8 @@
         </tbody>
     </table>
     <p style="margin-top: 10px; font-size: 13px; color: #6c757d;">
-        <strong>Criterio de selección:</strong> El mejor método es el que converge en menos iteraciones con el menor error.
+        <strong>Criterio:</strong> El mejor método es el que tiene menor error absoluto promedio durante todas las iteraciones.
+        Se muestran múltiples métricas de error para análisis completo.
     </p>
     {% endif %}
     {% else %}

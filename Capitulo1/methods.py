@@ -399,16 +399,80 @@ def calcular_funcion_g_optima(f_str, x0):
     
     return g_str, convergencia_info
 
+def calcular_estadisticas_error(tabla):
+    """
+    Calcula estadísticas de error de una tabla de iteraciones.
+    
+    Returns:
+        dict con error_abs_promedio, error_rel_promedio, error_abs_max, error_rel_max
+    """
+    if not tabla or len(tabla) <= 1:
+        return {
+            'error_abs_promedio': 0.0,
+            'error_rel_promedio': 0.0,
+            'error_abs_max': 0.0,
+            'error_rel_max': 0.0
+        }
+    
+    errores = []
+    valores_x = []
+    
+    # Recopilar errores y valores de x
+    for fila in tabla:
+        if len(fila) >= 4 and fila[3] is not None and fila[3] != "N/A":
+            try:
+                error = float(fila[3])
+                errores.append(error)
+            except:
+                pass
+        # Obtener el valor de x (índice 1 para la mayoría de métodos)
+        if len(fila) >= 2:
+            try:
+                x_val = float(fila[1])
+                valores_x.append(x_val)
+            except:
+                pass
+    
+    if not errores:
+        return {
+            'error_abs_promedio': 0.0,
+            'error_rel_promedio': 0.0,
+            'error_abs_max': 0.0,
+            'error_rel_max': 0.0
+        }
+    
+    # Calcular errores absolutos
+    errores_abs = [abs(e) for e in errores]
+    error_abs_promedio = np.mean(errores_abs)
+    error_abs_max = np.max(errores_abs)
+    
+    # Calcular errores relativos
+    errores_rel = []
+    for i, x_val in enumerate(valores_x[1:], 1):  # Empezar desde segundo valor
+        if x_val != 0 and i < len(errores):
+            err_rel = abs(errores[i] / x_val)
+            errores_rel.append(err_rel)
+    
+    error_rel_promedio = np.mean(errores_rel) if errores_rel else 0.0
+    error_rel_max = np.max(errores_rel) if errores_rel else 0.0
+    
+    return {
+        'error_abs_promedio': error_abs_promedio,
+        'error_rel_promedio': error_rel_promedio,
+        'error_abs_max': error_abs_max,
+        'error_rel_max': error_rel_max
+    }
+
 def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, tipo_error='absoluto'):
     """
-    Ejecuta todos los métodos y devuelve los resultados comparativos.
+    Ejecuta todos los métodos y devuelve los resultados comparativos con estadísticas detalladas.
     Identifica automáticamente el mejor método.
     
     Args:
         tipo_error: 'absoluto', 'relativo' o 'condicion'
     
     Returns:
-        Lista de resultados con el mejor método marcado
+        Lista de resultados con el mejor método marcado y estadísticas de error completas
     """
     resultados_comparativos = []
 
@@ -418,51 +482,58 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, tipo_error='absoluto'):
         xi = x0 - 2
         xs = x0 + 2
 
-
     resultados = {}
     
     # Bisección
     tabla_biseccion, resultado_biseccion, mensaje_biseccion = biseccion(f_str, xi, xs, tol, niter, tipo_error)
     if resultado_biseccion is not None:
         n_biseccion = len(tabla_biseccion) - 1
-        error_biseccion = tabla_biseccion[-1][3] if n_biseccion > 0 and tabla_biseccion[-1][3] is not None else "N/A"
+        error_biseccion = tabla_biseccion[-1][3] if n_biseccion > 0 and tabla_biseccion[-1][3] is not None else 0
+        estadisticas = calcular_estadisticas_error(tabla_biseccion)
         resultados_comparativos.append({
             'metodo': 'Bisección',
             'xs': resultado_biseccion,
             'n': n_biseccion,
-            'error': error_biseccion
+            'error': error_biseccion,
+            **estadisticas
         })
-
     else:
-        # Añadir mensaje de error
         resultados_comparativos.append({
             'metodo': 'Bisección',
             'xs': "N/A",
             'n': "N/A",
             'error': "N/A",
-            'info': mensaje_biseccion  # "Intervalo inadecuado"
+            'info': mensaje_biseccion,
+            'error_abs_promedio': float('inf'),
+            'error_rel_promedio': float('inf'),
+            'error_abs_max': float('inf'),
+            'error_rel_max': float('inf')
         })
     
     # Regla Falsa
     tabla_regla_falsa, resultado_regla_falsa, mensaje_regla_falsa = regla_falsa(f_str, xi, xs, tol, niter, tipo_error)
     if resultado_regla_falsa is not None:
         n_regla_falsa = len(tabla_regla_falsa) - 1
-        error_regla_falsa = tabla_regla_falsa[-1][3] if n_regla_falsa > 0 and tabla_regla_falsa[-1][3] is not None else "N/A"
+        error_regla_falsa = tabla_regla_falsa[-1][3] if n_regla_falsa > 0 and tabla_regla_falsa[-1][3] is not None else 0
+        estadisticas = calcular_estadisticas_error(tabla_regla_falsa)
         resultados_comparativos.append({
             'metodo': 'Regla Falsa',
             'xs': resultado_regla_falsa,
             'n': n_regla_falsa,
-            'error': error_regla_falsa
+            'error': error_regla_falsa,
+            **estadisticas
         })
-
     else:
-        # Añadir mensaje de error
         resultados_comparativos.append({
             'metodo': 'Regla Falsa',
             'xs': "N/A",
             'n': "N/A",
             'error': "N/A",
-            'info': mensaje_regla_falsa
+            'info': mensaje_regla_falsa,
+            'error_abs_promedio': float('inf'),
+            'error_rel_promedio': float('inf'),
+            'error_abs_max': float('inf'),
+            'error_rel_max': float('inf')
         })
     
     # Punto Fijo
@@ -473,46 +544,54 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, tipo_error='absoluto'):
     resultado_punto_fijo, tabla_punto_fijo, mensaje_punto_fijo = punto_fijo(x0, tol, niter, f_str, g_str, tipo_error)
     if resultado_punto_fijo is not None:
         n_punto_fijo = len(tabla_punto_fijo) - 1
-        error_punto_fijo = tabla_punto_fijo[-1][3] if n_punto_fijo > 0 and tabla_punto_fijo[-1][3] is not None else "N/A"
+        error_punto_fijo = tabla_punto_fijo[-1][3] if n_punto_fijo > 0 and tabla_punto_fijo[-1][3] is not None else 0
+        estadisticas = calcular_estadisticas_error(tabla_punto_fijo)
         resultados_comparativos.append({
             'metodo': 'Punto Fijo',
             'xs': resultado_punto_fijo,
             'n': n_punto_fijo,
             'error': error_punto_fijo,
             'g_str': g_str,
-            'convergencia_info': convergencia_info
+            'convergencia_info': convergencia_info,
+            **estadisticas
         })
-
     else:
-        # Añadir mensaje de error
         resultados_comparativos.append({
             'metodo': 'Punto Fijo',
             'xs': "N/A",
             'n': "N/A",
             'error': "N/A",
-            'info': mensaje_punto_fijo
+            'info': mensaje_punto_fijo,
+            'error_abs_promedio': float('inf'),
+            'error_rel_promedio': float('inf'),
+            'error_abs_max': float('inf'),
+            'error_rel_max': float('inf')
         })
 
     # Newton-Raphson
     resultado_newton, tabla_newton, mensaje_newton = newton_raphson(x0, tol, niter, f_str, tipo_error)
     if resultado_newton is not None:
         n_newton = len(tabla_newton) - 1
-        error_newton = tabla_newton[-1][3] if n_newton > 0 and tabla_newton[-1][3] is not None else "N/A"
+        error_newton = tabla_newton[-1][3] if n_newton > 0 and tabla_newton[-1][3] is not None else 0
+        estadisticas = calcular_estadisticas_error(tabla_newton)
         resultados_comparativos.append({
             'metodo': 'Newton',
             'xs': resultado_newton,
             'n': n_newton,
-            'error': error_newton
+            'error': error_newton,
+            **estadisticas
         })
-
     else:
-        # Añadir mensaje de error
         resultados_comparativos.append({
             'metodo': 'Newton',
             'xs': "N/A",
             'n': "N/A",
             'error': "N/A",
-            'info': mensaje_newton
+            'info': mensaje_newton,
+            'error_abs_promedio': float('inf'),
+            'error_rel_promedio': float('inf'),
+            'error_abs_max': float('inf'),
+            'error_rel_max': float('inf')
         })
     
     # Secante
@@ -521,64 +600,72 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, tipo_error='absoluto'):
     resultado_secante, tabla_secante, mensaje_secante = secante(x0, x1, tol, niter, f_str, tipo_error)
     if resultado_secante is not None:
         n_secante = len(tabla_secante) - 1
-        error_secante = tabla_secante[-1][3] if n_secante > 0 and tabla_secante[-1][3] is not None else "N/A"
+        error_secante = tabla_secante[-1][3] if n_secante > 0 and tabla_secante[-1][3] is not None else 0
+        estadisticas = calcular_estadisticas_error(tabla_secante)
         resultados_comparativos.append({
             'metodo': 'Secante',
             'xs': resultado_secante,
             'n': n_secante,
-            'error': error_secante
+            'error': error_secante,
+            **estadisticas
         })
-
     else:
-        # Añadir mensaje de error
         resultados_comparativos.append({
             'metodo': 'Secante',
             'xs': "N/A",
             'n': "N/A",
             'error': "N/A",
-            'info': mensaje_secante
+            'info': mensaje_secante,
+            'error_abs_promedio': float('inf'),
+            'error_rel_promedio': float('inf'),
+            'error_abs_max': float('inf'),
+            'error_rel_max': float('inf')
         })
     
     # Raíces Múltiples
     resultado_rm, tabla_rm, mensaje_rm = raices_multiples(x0, tol, niter, f_str, tipo_error)
     if resultado_rm is not None:
         n_rm = len(tabla_rm) - 1
-        error_rm = tabla_rm[-1][3] if n_rm > 0 and tabla_rm[-1][3] is not None else "N/A"
+        error_rm = tabla_rm[-1][3] if n_rm > 0 and tabla_rm[-1][3] is not None else 0
+        estadisticas = calcular_estadisticas_error(tabla_rm)
         resultados_comparativos.append({
             'metodo': 'Raíces Múltiples',
             'xs': resultado_rm,
             'n': n_rm,
-            'error': error_rm
+            'error': error_rm,
+            **estadisticas
         })
-
     else:
-        # Añadir mensaje de error
         resultados_comparativos.append({
             'metodo': 'Raíces Múltiples',
             'xs': "N/A",
             'n': "N/A",
             'error': "N/A",
-            'info': mensaje_rm
+            'info': mensaje_rm,
+            'error_abs_promedio': float('inf'),
+            'error_rel_promedio': float('inf'),
+            'error_abs_max': float('inf'),
+            'error_rel_max': float('inf')
         })
     
     # Identificar el mejor método
-    # Criterios: 1) Menor número de iteraciones, 2) Menor error final
+    # Criterio: menor error promedio absoluto, luego menor número de iteraciones
     mejor_metodo = None
+    menor_error_promedio = float('inf')
     menor_iteraciones = float('inf')
-    menor_error = float('inf')
     
     for resultado in resultados_comparativos:
         if resultado['n'] != "N/A" and resultado['error'] != "N/A":
+            error_prom = resultado.get('error_abs_promedio', float('inf'))
             n_iter = resultado['n']
-            error_final = resultado['error']
             
-            # Comparar primero por número de iteraciones, luego por error
-            if n_iter < menor_iteraciones or (n_iter == menor_iteraciones and error_final < menor_error):
+            # Comparar primero por error promedio, luego por iteraciones
+            if error_prom < menor_error_promedio or (error_prom == menor_error_promedio and n_iter < menor_iteraciones):
                 if mejor_metodo:
                     mejor_metodo['mejor'] = False
                 mejor_metodo = resultado
+                menor_error_promedio = error_prom
                 menor_iteraciones = n_iter
-                menor_error = error_final
                 resultado['mejor'] = True
             else:
                 resultado['mejor'] = False

@@ -60,6 +60,22 @@
             outline: none;
             border-color: #3498db;
         }
+        small {
+            display: block;
+            margin-top: 4px;
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .checkbox-group label {
+            margin: 0;
+            font-weight: normal;
+        }
         button {
             background-color: #3498db;
             color: white;
@@ -106,6 +122,14 @@
             font-weight: 600;
             color: #2c3e50;
         }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        h2, h3 {
+            color: #2c3e50;
+            margin: 20px 0 10px 0;
+            font-size: 18px;
+        }
         .grafico {
             text-align: center;
             margin: 20px 0;
@@ -113,58 +137,82 @@
         .grafico img {
             max-width: 100%;
             border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .punto-input {
+        .points-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .point-inputs {
             display: flex;
             gap: 10px;
-            margin-bottom: 10px;
-            align-items: center;
         }
-        .punto-input > div {
+        .point-inputs input {
             flex: 1;
         }
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #3498db;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .back-link:hover {
-            text-decoration: underline;
-        }
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-        .checkbox-group label {
-            margin: 0;
-            font-weight: normal;
+        .poly-result {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
     </style>
+    <script>
+        function updatePointInputs() {
+            const numPuntos = parseInt(document.getElementById('num_puntos').value) || 2;
+            const container = document.getElementById('points-container');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < numPuntos; i++) {
+                const div = document.createElement('div');
+                div.className = 'point-inputs';
+                div.innerHTML = `
+                    <input type="number" step="any" name="x_${i}" placeholder="x${i}" required>
+                    <input type="number" step="any" name="y_${i}" placeholder="y${i}" required>
+                `;
+                container.appendChild(div);
+            }
+        }
+        
+        window.onload = function() {
+            updatePointInputs();
+        }
+    </script>
 </head>
 <body>
-    <a href="{% url 'capitulo3:optionsch3' %}" class="back-link">← Volver al índice del Capítulo 3</a>
-    
     <h1>Método de Vandermonde</h1>
     <div class="description">
-        <p>Encuentra el polinomio interpolante P(x) de grado n-1 que pasa por n puntos dados (xi, yi) resolviendo el sistema Va = y, donde V es la matriz de Vandermonde.</p>
+        <p>Encuentra el polinomio interpolante resolviendo el sistema Ax=b usando la matriz de Vandermonde.</p>
     </div>
 
-    <form method="POST" id="interpolationForm">
+    {% if messages %}
+        {% for message in messages %}
+        <div class="mensaje error">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
         {% csrf_token %}
         
         <div class="form-group">
-            <label for="num_puntos">Número de puntos (Max 8):</label>
+            <label for="num_puntos">Número de puntos (2-8):</label>
             <input type="number" id="num_puntos" name="num_puntos" min="2" max="8" 
-                   value="{{ num_puntos|default:2 }}" required onchange="generarInputs()">
+                   value="{{ num_puntos|default:'2' }}" onchange="updatePointInputs()" required>
+            <small>Ingrese entre 2 y 8 puntos para interpolar</small>
         </div>
 
-        <div id="puntos-container">
-            <!-- Los inputs se generarán aquí con JS -->
+        <div class="form-group">
+            <label>Puntos (x, y):</label>
+            <div id="points-container" class="points-container"></div>
+            <small>Ingrese las coordenadas x e y para cada punto</small>
         </div>
 
         <div class="checkbox-group">
@@ -175,91 +223,68 @@
         <button type="submit">Calcular Interpolación</button>
     </form>
 
-    {% if messages %}
-        {% for message in messages %}
-        <div class="mensaje error">
-            {{ message }}
-        </div>
-        {% endfor %}
-    {% endif %}
-
     {% if poly_str %}
     <div class="mensaje success">
-        <h3>Polinomio Resultante:</h3>
-        <p style="font-family: monospace; font-size: 1.1em; margin-top: 10px;">{{ poly_str }}</p>
-        
-        {% if mensaje_error %}
-        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #a3d9a5;">
-            <strong>Análisis de estabilidad (eliminación de punto):</strong>
-            <p>{{ mensaje_error }}</p>
-        </div>
-        {% endif %}
+        <p><strong>Polinomio encontrado exitosamente</strong></p>
     </div>
+
+    <h3>Polinomio Interpolante</h3>
+    <div class="poly-result">{{ poly_str }}</div>
+
+    {% if mensaje_error %}
+    <h3>Validación del Método</h3>
+    <div class="mensaje success">
+        {{ mensaje_error }}
+    </div>
+    {% endif %}
 
     {% if image_base64 %}
     <div class="grafico">
-        <h3>Gráfico de la Interpolación</h3>
+        <h3>Gráfico de Interpolación</h3>
         <img src="data:image/png;base64,{{ image_base64 }}" alt="Gráfico de interpolación">
     </div>
     {% endif %}
-    {% endif %}
 
     {% if resultados_comparacion %}
-    <h3>Comparación de Métodos</h3>
+    <h3>Comparación de Métodos de Interpolación</h3>
     <table>
         <thead>
             <tr>
                 <th>Método</th>
-                <th>Polinomio / Resultado</th>
-                <th>Error (al quitar un punto)</th>
+                <th>Error Puntual</th>
+                <th>Error Abs Promedio</th>
+                <th>Error Rel Promedio</th>
+                <th>Error Abs Máx</th>
+                <th>Error Rel Máx</th>
+                <th>Estado</th>
             </tr>
         </thead>
         <tbody>
-            {% for metodo, resultado, error in resultados_comparacion %}
-            <tr>
-                <td><strong>{{ metodo }}</strong></td>
-                <td style="font-family: monospace; font-size: 0.9em;">{{ resultado }}</td>
-                <td>{{ error }}</td>
+            {% for res in resultados_comparacion %}
+            <tr {% if res.mejor %}style="background-color: #d4edda; font-weight: bold;"{% endif %}>
+                <td>{{ res.metodo }}</td>
+                <td>{{ res.error_puntual|floatformat:6 }}</td>
+                <td>{{ res.error_absoluto|floatformat:6 }}</td>
+                <td>{{ res.error_relativo|floatformat:6 }}</td>
+                <td>{{ res.error_abs_max|floatformat:6 }}</td>
+                <td>{{ res.error_rel_max|floatformat:6 }}</td>
+                <td>
+                    {% if res.mejor %}
+                        <span style="color: #28a745;">✓ Mejor método</span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    <p style="margin-top: 10px; font-size: 13px; color: #6c757d;">
+        <strong>Criterio:</strong> El mejor método es el que tiene menor error puntual al eliminar un punto de prueba.
+        Los errores promedio y máximos se calculan evaluando el polinomio en todos los puntos originales.
+    </p>
     {% endif %}
-
-    <script>
-        function generarInputs() {
-            const num = parseInt(document.getElementById('num_puntos').value);
-            const container = document.getElementById('puntos-container');
-            container.innerHTML = '';
-            
-            // Datos previos si existen
-            const x_vals = {{ x_vals|default:"[]" }};
-            const y_vals = {{ y_vals|default:"[]" }};
-            
-            for (let i = 0; i < num; i++) {
-                const div = document.createElement('div');
-                div.className = 'punto-input';
-                
-                const valX = x_vals[i] !== undefined ? x_vals[i] : '';
-                const valY = y_vals[i] !== undefined ? y_vals[i] : '';
-                
-                div.innerHTML = `
-                    <div>
-                        <label>x<sub>${i}</sub></label>
-                        <input type="number" name="x_${i}" step="any" required value="${valX}" placeholder="Valor x">
-                    </div>
-                    <div>
-                        <label>y<sub>${i}</sub></label>
-                        <input type="number" name="y_${i}" step="any" required value="${valY}" placeholder="Valor y">
-                    </div>
-                `;
-                container.appendChild(div);
-            }
-        }
-
-        // Generar inputs al cargar
-        document.addEventListener('DOMContentLoaded', generarInputs);
-    </script>
+    {% endif %}
 </body>
 </html>
 
