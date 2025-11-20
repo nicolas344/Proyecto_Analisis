@@ -1,296 +1,186 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Método de Regla Falsa</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-            line-height: 1.6;
-            padding: 20px;
-            max-width: 900px;
-            margin: 0 auto;
-            background-color: #f8f9fa;
-        }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 24px;
-        }
-        .description {
-            background-color: #e8f4f8;
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #34495e;
-        }
-        form {
-            background-color: white;
-            padding: 20px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #2c3e50;
-            font-size: 14px;
-        }
-        input[type="text"],
-        input[type="number"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        input[type="text"]:focus,
-        input[type="number"]:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-        small {
-            display: block;
-            margin-top: 4px;
-            color: #7f8c8d;
-            font-size: 12px;
-        }
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-        .checkbox-group label {
-            margin: 0;
-            font-weight: normal;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        .mensaje {
-            padding: 12px;
-            border-radius: 4px;
-            margin: 20px 0;
-            font-size: 14px;
-        }
-        .mensaje.success {
-            background-color: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-        .mensaje.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-        table {
-            width: 100%;
-            background-color: white;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 14px;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        tr:hover {
-            background-color: #f8f9fa;
-        }
-        h2, h3 {
-            color: #2c3e50;
-            margin: 20px 0 10px 0;
-            font-size: 18px;
-        }
-        .grafico {
-            text-align: center;
-            margin: 20px 0;
-        }
-        .grafico img {
-            max-width: 100%;
-            border-radius: 4px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Método de Regla Falsa</h1>
-    <div class="description">
-        <p>Mejora del método de bisección que usa interpolación lineal.</p>
-    </div>
+{% extends 'base.html' %}
+{% load static %}
 
-    <form method="POST">
-        {% csrf_token %}
-        
-        <div class="form-group">
-            <label for="funcion">Función f(x):</label>
-            <input type="text" id="funcion" name="funcion" 
-                   placeholder="Ejemplo: x**4 - 5*x + 6" 
-                   value="{{ funcion }}" required>
-            <small>Use ** para potencias, * para multiplicación</small>
-        </div>
+{% block title %}Método de Regla Falsa{% endblock %}
 
-        <div class="form-group">
-            <label for="xi">Límite inferior (xi):</label>
-            <input type="number" id="xi" name="xi" step="any" 
-                   value="{{ xi }}" required>
-        </div>
-
-        <div class="form-group">
-            <label for="xs">Límite superior (xs):</label>
-            <input type="number" id="xs" name="xs" step="any" 
-                   value="{{ xs }}" required>
-        </div>
-
-        <div class="form-group">
-            <label for="tol">Tolerancia:</label>
-            <input type="number" id="tol" name="tol" step="any" 
-                   value="{{ tol|default:'1e-7' }}" required>
-        </div>
-
-        <div class="form-group">
-            <label for="niter">Número máximo de iteraciones:</label>
-            <input type="number" id="niter" name="niter" 
-                   value="{{ niter|default:'100' }}" required>
-        </div>
-
-        <div class="form-group">
-            <label>Tipo de Error:</label>
-            <div style="display: flex; gap: 15px; margin-top: 8px;">
-                <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
-                    <input type="radio" name="tipo_error" value="absoluto" 
-                           {% if tipo_error == 'absoluto' or not tipo_error %}checked{% endif %}>
-                    Error Absoluto
-                </label>
-                <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
-                    <input type="radio" name="tipo_error" value="relativo" 
-                           {% if tipo_error == 'relativo' %}checked{% endif %}>
-                    Error Relativo
-                </label>
-                <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
-                    <input type="radio" name="tipo_error" value="condicion" 
-                           {% if tipo_error == 'condicion' %}checked{% endif %}>
-                    Error de Condición
-                </label>
-            </div>
-            <small>Error absoluto: |x_n - x_(n-1)|, Error relativo: |x_n - x_(n-1)|/|x_n|, Error de condición: |f(x_n)|</small>
-        </div>
-
-        <div class="checkbox-group">
-            <input type="checkbox" id="comparar" name="comparar">
-            <label for="comparar">Comparar con otros métodos</label>
-        </div>
-
-        <button type="submit">Calcular</button>
-    </form>
-
-    {% if resultado %}
-    <div class="mensaje success">
-        <p><strong>Raíz aproximada:</strong> {{ resultado }}</p>
-        <p>{{ mensaje }}</p>
-        <a href="{% url 'capitulo1:generar_pdf' %}" 
-           style="display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #e74c3c; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
-            📄 Descargar Informe en PDF
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Método de Regla Falsa</h2>
+        <a href="{% url 'capitulo1:index' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
         </a>
     </div>
 
-    <h3>Tabla de iteraciones</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Iteración</th>
-                <th>xm</th>
-                <th>f(xm)</th>
-                <th>Error</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for iter, xm, fxm, error in tabla %}
-            <tr>
-                <td>{{ iter }}</td>
-                <td>{{ xm }}</td>
-                <td>{{ fxm }}</td>
-                <td>{{ error|default:"N/A" }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="alert alert-info">
+        <strong>Descripción:</strong> Mejora del método de bisección que usa interpolación lineal.
+    </div>
+
+    <!-- Información importante del método -->
+    <div class="alert alert-secondary text-light mb-4" style="background-color: #2C2C2C; border: 1px solid #E60012; border-radius: 15px;">
+        <h5 class="fw-bold">Información importante:</h5>
+        <ul>
+            <li>La función debe ser continua en el intervalo [xi, xs].</li>
+            <li>f(xi) y f(xs) deben tener signos opuestos (es decir, <em>f(xi) · f(xs) &lt; 0</em>).</li>
+            <li>Utiliza una fórmula basada en interpolación lineal para estimar la raíz.</li>
+            <li>Es más rápido que el método de bisección en muchos casos.</li>
+            <li>Requiere que la raíz esté contenida en el intervalo inicial para garantizar convergencia.</li>
+        </ul>
+    </div>
+
+    <form method="POST" class="card shadow-sm mb-4">
+        <div class="card-body">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold">Función f(x):</label>
+                <input type="text" name="funcion" class="form-control" 
+                       placeholder="Ejemplo: x**4 - 5*x + 6" 
+                       value="{{ funcion }}" required>
+                <small class="text-muted">Use ** para potencias, * para multiplicación</small>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Límite inferior (xi):</label>
+                    <input type="number" name="xi" class="form-control" step="any" 
+                           value="{{ xi }}" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Límite superior (xs):</label>
+                    <input type="number" name="xs" class="form-control" step="any" 
+                           value="{{ xs }}" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Tolerancia:</label>
+                    <input type="number" name="tol" class="form-control" step="any" 
+                           value="{{ tol|default:'1e-7' }}" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Número máximo de iteraciones:</label>
+                    <input type="number" name="niter" class="form-control" 
+                           value="{{ niter|default:'100' }}" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Tipo de Error:</label>
+                <div class="d-flex gap-3 mt-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="tipo_error" value="absoluto" id="error_abs"
+                               {% if tipo_error == 'absoluto' or not tipo_error %}checked{% endif %}>
+                        <label class="form-check-label" for="error_abs">Error Absoluto</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="tipo_error" value="relativo" id="error_rel"
+                               {% if tipo_error == 'relativo' %}checked{% endif %}>
+                        <label class="form-check-label" for="error_rel">Error Relativo</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="tipo_error" value="condicion" id="error_cond"
+                               {% if tipo_error == 'condicion' %}checked{% endif %}>
+                        <label class="form-check-label" for="error_cond">Error de Condición</label>
+                    </div>
+                </div>
+                <small class="text-muted">Error absoluto: |x_n - x_(n-1)|, Error relativo: |x_n - x_(n-1)|/|x_n|, Error de condición: |f(x_n)|</small>
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="comparar" name="comparar">
+                <label class="form-check-label" for="comparar">Comparar con otros métodos</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-calculator"></i> Calcular
+            </button>
+        </div>
+    </form>
+
+    {% if resultado %}
+    <div class="alert alert-success">
+        <p><strong>Raíz aproximada:</strong> {{ resultado }}</p>
+        <p>{{ mensaje }}</p>
+    </div>
+
+    <h3 class="mb-3">Tabla de iteraciones</h3>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Iteración</th>
+                    <th>xm</th>
+                    <th>f(xm)</th>
+                    <th>Error</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for iter, xm, fxm, error in tabla %}
+                <tr>
+                    <td>{{ iter }}</td>
+                    <td>{{ xm }}</td>
+                    <td>{{ fxm }}</td>
+                    <td>{{ error|default:"N/A" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     {% if grafico %}
-    <div class="grafico">
-        <h3>Gráfico de la función</h3>
-        <img src="data:image/png;base64,{{ grafico }}" alt="Gráfico">
+    <div class="text-center my-4">
+        <h3 class="mb-3">Gráfico de la función</h3>
+        <img src="data:image/png;base64,{{ grafico }}" alt="Gráfico" class="img-fluid rounded">
     </div>
     {% endif %}
 
     {% if resultados_comparativos %}
-    <h3>Comparación con otros métodos</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Método</th>
-                <th>Raíz (xs)</th>
-                <th>Iteraciones (n)</th>
-                <th>Error</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for res in resultados_comparativos %}
-            <tr {% if res.mejor %}style="background-color: #d4edda; font-weight: bold;"{% endif %}>
-                <td>{{ res.metodo }}</td>
-                <td>{{ res.xs }}</td>
-                <td>{{ res.n }}</td>
-                <td>{{ res.error }}</td>
-                <td>
-                    {% if res.mejor %}
-                        <span style="color: #28a745;">✓ Mejor método</span>
-                    {% elif res.info %}
-                        <span style="color: #dc3545;">{{ res.info }}</span>
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <p style="margin-top: 10px; font-size: 13px; color: #6c757d;">
+    <h3 class="mb-3">Comparación con otros métodos</h3>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Método</th>
+                    <th>Raíz (xs)</th>
+                    <th>Iteraciones (n)</th>
+                    <th>Error</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for res in resultados_comparativos %}
+                <tr {% if res.mejor %}class="table-success fw-bold"{% endif %}>
+                    <td>{{ res.metodo }}</td>
+                    <td>{{ res.xs }}</td>
+                    <td>{{ res.n }}</td>
+                    <td>{{ res.error }}</td>
+                    <td>
+                        {% if res.mejor %}
+                            <span class="text-success">✓ Mejor método</span>
+                        {% elif res.info %}
+                            <span class="text-danger">{{ res.info }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="text-muted small">
         <strong>Criterio de selección:</strong> El mejor método es el que converge en menos iteraciones con el menor error.
     </p>
     {% endif %}
-    {% else %}
-    <div class="mensaje error">
+    {% elif mensaje %}
+    <div class="alert alert-danger">
         <p>{{ mensaje }}</p>
     </div>
     {% endif %}
 
-</body>
-</html>
+</div>
+{% endblock %}

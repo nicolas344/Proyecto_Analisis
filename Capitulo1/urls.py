@@ -12,5 +12,4 @@ urlpatterns = [
     path('newton/', views.newton_view, name='newton'),
     path('secante/', views.secante_view, name='secante'),
     path('raicesmultiples/', views.raices_multiples_view, name='raicesmultiples'),
-    path('generar-pdf/', views.generar_pdf_view, name='generar_pdf'),
 ]

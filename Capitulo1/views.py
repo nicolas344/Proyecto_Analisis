@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from .methods import biseccion, regla_falsa, punto_fijo, newton_raphson, secante, raices_multiples, ejecutar_todos
 from .graph import graficar_funcion
-from .pdf_generator import generar_informe_pdf
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 import json
+import sympy as sp
 
 def capitulo1_index(request):
     """Vista principal del Capítulo 1"""
@@ -34,19 +34,6 @@ def biseccion_view(request):
             resultados_comparativos = ejecutar_todos(f_str=funcion, g_str=None, xi=xi, xs=xs, tol=tol, niter=niter, x1=None, tipo_error=tipo_error)
         else:
             resultados_comparativos = None
-
-        # Guardar datos en sesión para PDF
-        request.session['pdf_data'] = {
-            'metodo_nombre': 'Método de Bisección',
-            'funcion': funcion,
-            'parametros': {'xi': xi, 'xs': xs, 'tol': tol, 'niter': niter},
-            'tabla': tabla,
-            'resultado': resultado,
-            'mensaje': mensaje,
-            'tipo_error': tipo_error,
-            'resultados_comparativos': resultados_comparativos,
-            'grafico': grafico
-        }
 
         context.update({
             'tabla': tabla,
@@ -90,19 +77,6 @@ def regla_falsa_view(request):
         else:
             resultados_comparativos = None
 
-        # Guardar datos en sesión para PDF
-        request.session['pdf_data'] = {
-            'metodo_nombre': 'Método de Regla Falsa',
-            'funcion': funcion,
-            'parametros': {'xi': xi, 'xs': xs, 'tol': tol, 'niter': niter},
-            'tabla': tabla,
-            'resultado': resultado,
-            'mensaje': mensaje,
-            'tipo_error': tipo_error,
-            'resultados_comparativos': resultados_comparativos,
-            'grafico': grafico
-        }
-
         context.update({
             'tabla': tabla,
             'resultado': resultado,
@@ -145,19 +119,6 @@ def punto_fijo_view(request):
         else:
             resultados_comparativos = None
 
-        # Guardar datos en sesión para PDF
-        request.session['pdf_data'] = {
-            'metodo_nombre': 'Método de Punto Fijo',
-            'funcion': f_str,
-            'parametros': {'x0': x0, 'g': g_str, 'tol': tol, 'niter': niter},
-            'tabla': tabla,
-            'resultado': resultado,
-            'mensaje': mensaje,
-            'tipo_error': tipo_error,
-            'resultados_comparativos': resultados_comparativos,
-            'grafico': grafico
-        }
-
         context.update({
             'funcion': f_str,
             'g': g_str,
@@ -198,19 +159,6 @@ def newton_view(request):
             resultados_comparativos = ejecutar_todos(f_str=f_str, g_str=None, xi=x0, xs=None, tol=tol, niter=niter, x1=None, tipo_error=tipo_error)
         else:
             resultados_comparativos = None
-
-        # Guardar datos en sesión para PDF
-        request.session['pdf_data'] = {
-            'metodo_nombre': 'Método de Newton-Raphson',
-            'funcion': f_str,
-            'parametros': {'x0': x0, 'tol': tol, 'niter': niter},
-            'tabla': tabla,
-            'resultado': resultado,
-            'mensaje': mensaje,
-            'tipo_error': tipo_error,
-            'resultados_comparativos': resultados_comparativos,
-            'grafico': grafico
-        }
 
         context.update({
             'funcion': f_str,
@@ -253,19 +201,6 @@ def secante_view(request):
         else:
             resultados_comparativos = None
 
-        # Guardar datos en sesión para PDF
-        request.session['pdf_data'] = {
-            'metodo_nombre': 'Método de la Secante',
-            'funcion': f_str,
-            'parametros': {'x0': x0, 'x1': x1, 'tol': tol, 'niter': niter},
-            'tabla': tabla,
-            'resultado': resultado,
-            'mensaje': mensaje,
-            'tipo_error': tipo_error,
-            'resultados_comparativos': resultados_comparativos,
-            'grafico': grafico
-        }
-
         context.update({
             'funcion': f_str,
             'x0': x0,
@@ -307,19 +242,6 @@ def raices_multiples_view(request):
         else:
             resultados_comparativos = None
 
-        # Guardar datos en sesión para PDF
-        request.session['pdf_data'] = {
-            'metodo_nombre': 'Método de Raíces Múltiples',
-            'funcion': f_str,
-            'parametros': {'x0': x0, 'tol': tol, 'niter': niter},
-            'tabla': tabla,
-            'resultado': resultado,
-            'mensaje': mensaje,
-            'tipo_error': tipo_error,
-            'resultados_comparativos': resultados_comparativos,
-            'grafico': grafico
-        }
-
         context.update({
             'f': f_str,
             'x0': x0,
@@ -334,42 +256,4 @@ def raices_multiples_view(request):
         })
 
     return render(request, 'raicesmultiples.html', context)
-
-
-def generar_pdf_view(request):
-    """
-    Vista para generar y descargar el informe en PDF.
-    Lee los datos de la sesión del último cálculo realizado.
-    """
-    # Obtener datos de la sesión
-    pdf_data = request.session.get('pdf_data')
-    
-    if not pdf_data:
-        return HttpResponse("No hay datos para generar el PDF. Por favor ejecuta un método primero.", status=400)
-    
-    try:
-        # Generar PDF
-        pdf_buffer = generar_informe_pdf(
-            metodo_nombre=pdf_data['metodo_nombre'],
-            funcion=pdf_data['funcion'],
-            parametros=pdf_data['parametros'],
-            tabla=pdf_data['tabla'],
-            resultado=pdf_data['resultado'],
-            mensaje=pdf_data['mensaje'],
-            tipo_error=pdf_data['tipo_error'],
-            resultados_comparativos=pdf_data.get('resultados_comparativos'),
-            grafico_base64=pdf_data.get('grafico')
-        )
-        
-        # Preparar respuesta HTTP
-        response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
-        metodo = pdf_data['metodo_nombre'].replace(' ', '_')
-        tipo = pdf_data['tipo_error']
-        filename = f"informe_{metodo}_{tipo}.pdf"
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        
-        return response
-        
-    except Exception as e:
-        return HttpResponse(f"Error al generar PDF: {str(e)}", status=500)
 

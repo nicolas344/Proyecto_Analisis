@@ -389,45 +389,111 @@ def evaluar_spline_punto(coef, x, xi, d):
 
 
 def comparar_metodos_interpolacion(x, y):
+    """
+    Compara todos los métodos de interpolación y calcula métricas de error detalladas.
+    
+    Returns:
+        Lista de diccionarios con información de cada método incluyendo:
+        - metodo: nombre del método
+        - polinomio: representación del polinomio
+        - error_puntual: error en el punto eliminado
+        - error_absoluto: error absoluto promedio
+        - error_relativo: error relativo promedio
+        - error_abs_max: error absoluto máximo
+        - error_rel_max: error relativo máximo
+        - mejor: True si es el mejor método
+    """
     resultados = []
     
     # Asegurar que hay al menos 3 puntos
     if len(x) < 3:
         return [], "Se necesitan al menos 3 puntos para comparar los métodos eliminando uno."
 
-    # Método Vandermonde
-    try:
-        _, polinomio_v, x_eval, p_eval, error_v = vandermonde_interpolation(x, y, 1)
-        resultados.append(("Vandermonde", polinomio_v, error_v))
-    except Exception as e:
-        resultados.append(("Vandermonde", "Error", str(e)))
-
-    # Método Newton
-    try:
-        _, polinomio_n, x_eval, p_eval, error_n = newton_interpolation(x, y, 1)
-        resultados.append(("Newton", polinomio_n, error_n))
-    except Exception as e:
-        resultados.append(("Newton", "Error", str(e)))
-
-    # Método Lagrange
-    try:
-        polinomio_l, x_eval, p_eval, error_l = lagrange_interpolation(x, y, 1)
-        resultados.append(("Lagrange", polinomio_l, error_l))
-    except Exception as e:
-        resultados.append(("Lagrange", "Error", str(e)))
-
-    # Spline Lineal
-    try:
-        polinomio_sp, x_eval, p_eval, error_sp = spline_interpolation(x, y, 'lineal')
-        resultados.append(("Spline Lineal", polinomio_sp, error_sp))
-    except Exception as e:
-        resultados.append(("Spline Lineal", "Error", str(e)))
-
-    # Spline Cúbico
-    try:
-        polinomio_spcub, x_eval, p_eval, error_spcub = spline_interpolation(x, y, 'cubico')
-        resultados.append(("Spline Cúbico", polinomio_spcub, error_spcub))
-    except Exception as e:
-        resultados.append(("Spline Cúbico", "Error", str(e)))
-
+    # Puntos de prueba para calcular errores (usar todos los puntos originales)
+    x_test = x.copy()
+    y_test = y.copy()
+    
+    metodos = [
+        ("Vandermonde", lambda: vandermonde_interpolation(x, y, 1)),
+        ("Newton Interpolante", lambda: newton_interpolation(x, y, 1)),
+        ("Lagrange", lambda: lagrange_interpolation(x, y, 1)),
+        ("Spline Lineal", lambda: spline_interpolation(x, y, 'lineal')),
+        ("Spline Cúbico", lambda: spline_interpolation(x, y, 'cubico'))
+    ]
+    
+    for metodo_nombre, metodo_func in metodos:
+        try:
+            # Ejecutar el método
+            resultado = metodo_func()
+            
+            # Extraer información según el método
+            if metodo_nombre in ["Vandermonde", "Newton Interpolante"]:
+                if metodo_nombre == "Vandermonde":
+                    coef, polinomio, x_eval, p_eval, error_msg = resultado
+                else:
+                    coef, polinomio, x_eval, p_eval, error_msg = resultado
+            else:  # Lagrange y Splines
+                polinomio, x_eval, p_eval, error_msg = resultado
+            
+            # Extraer el error puntual del mensaje
+            import re
+            match = re.search(r'error\s*=\s*([\d.]+)', error_msg)
+            error_puntual = float(match.group(1)) if match else 0.0
+            
+            # Calcular errores en todos los puntos originales
+            # Evaluar el polinomio en los puntos originales
+            errores_abs = []
+            errores_rel = []
+            
+            # Para cada punto original, calcular el error
+            for i in range(len(x)):
+                # Encontrar el valor interpolado en x[i]
+                idx = np.argmin(np.abs(x_eval - x[i]))
+                y_interp = p_eval[idx]
+                
+                # Calcular errores
+                error_abs = abs(y[i] - y_interp)
+                errores_abs.append(error_abs)
+                
+                if y[i] != 0:
+                    error_rel = abs((y[i] - y_interp) / y[i])
+                    errores_rel.append(error_rel)
+            
+            # Calcular métricas estadísticas
+            error_abs_promedio = np.mean(errores_abs) if errores_abs else 0.0
+            error_rel_promedio = np.mean(errores_rel) if errores_rel else 0.0
+            error_abs_max = np.max(errores_abs) if errores_abs else 0.0
+            error_rel_max = np.max(errores_rel) if errores_rel else 0.0
+            
+            resultados.append({
+                'metodo': metodo_nombre,
+                'polinomio': polinomio,
+                'error_msg': error_msg,
+                'error_puntual': error_puntual,
+                'error_absoluto': error_abs_promedio,
+                'error_relativo': error_rel_promedio,
+                'error_abs_max': error_abs_max,
+                'error_rel_max': error_rel_max,
+                'mejor': False
+            })
+            
+        except Exception as e:
+            resultados.append({
+                'metodo': metodo_nombre,
+                'polinomio': "Error",
+                'error_msg': str(e),
+                'error_puntual': float('inf'),
+                'error_absoluto': float('inf'),
+                'error_relativo': float('inf'),
+                'error_abs_max': float('inf'),
+                'error_rel_max': float('inf'),
+                'mejor': False
+            })
+    
+    # Determinar el mejor método (menor error puntual)
+    if resultados:
+        mejor_idx = min(range(len(resultados)), 
+                       key=lambda i: resultados[i]['error_puntual'])
+        resultados[mejor_idx]['mejor'] = True
+    
     return resultados

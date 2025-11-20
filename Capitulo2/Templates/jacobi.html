@@ -7,12 +7,31 @@
 {% block content %}
 
 <div class="container py-4">
-    <h2 class="mb-4 fw-bold">Método de Jacobi</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Método de Jacobi</h2>
+        <a href="{% url 'capitulo2:index' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
 
-    <form method="POST">
+    <div class="alert alert-info">
+        <strong>Descripción:</strong> Método iterativo que actualiza todas las componentes del vector simultáneamente en cada iteración.
+    </div>
+
+    <!-- Información importante del método -->
+    <div class="alert alert-secondary text-light mb-4" style="background-color: #2C2C2C; border: 1px solid #E60012; border-radius: 15px;">
+        <h5 class="fw-bold">Información importante:</h5>
+        <ul>
+            <li>Se requiere que la matriz A sea diagonalmente dominante o que converja.</li>
+            <li>El método itera sobre la fórmula <code>x^(k+1) = D^(-1)(b - (L + U)x^k)</code>.</li>
+            <li>Todas las variables se actualizan simultáneamente usando valores de la iteración anterior.</li>
+        </ul>
+    </div>
+
+    <form method="POST" class="card shadow-sm mb-4">
+        <div class="card-body">
         {% csrf_token %}
 
-        
         <div class="mb-3">
             <label class="fw-bold">Tamaño de la matriz A (n × n)</label>
             <input type="number" name="matrix_size" min="2" value="{{ matrix_size }}" class="form-control">
@@ -20,7 +39,6 @@
 
         <hr>
 
-        
         <h5 class="fw-bold mb-3">Matriz A</h5>
 
         {% for i in range %}
@@ -40,7 +58,6 @@
 
         <hr>
 
-        
         <h5 class="fw-bold mb-3">Vector b</h5>
 
         <div class="row mb-3">
@@ -58,7 +75,6 @@
 
         <hr>
 
-        
         <h5 class="fw-bold mb-3">x₀ (Aproximación inicial)</h5>
 
         <div class="row mb-3">
@@ -76,7 +92,6 @@
 
         <hr>
 
-        
         <div class="row mb-3">
             <div class="col">
                 <label class="fw-bold">Tolerancia</label>
@@ -89,35 +104,48 @@
             </div>
         </div>
 
-        
-        <div class="row mb-4">
-            <div class="col text-center">
-                <input type="checkbox" name="usar_cifras" {% if usar_cifras %}checked{% endif %}>
-                <label>Usar error relativo</label>
-            </div>
+        <hr>
 
-            <div class="col text-center">
-                <input type="checkbox" name="comparar" {% if comparar %}checked{% endif %}>
-                <label>Comparar con otros métodos</label>
-            </div>
+        <div class="mb-4">
+            <label class="fw-bold">Tipo de error</label>
+            <select name="error_type" class="form-select">
+                <option value="relative" {% if error_type == 'relative' %}selected{% endif %}>Error relativo</option>
+                <option value="absolute" {% if error_type == 'absolute' %}selected{% endif %}>Error absoluto</option>
+                <option value="condition" {% if error_type == 'condition' %}selected{% endif %}>Error condicional</option>
+            </select>
+        </div>
 
-            <div class="col text-center">
-                <input type="checkbox" name="pdf">
-                <label>Generar informe PDF</label>
+        <div class="mb-4">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="comparar" id="comparar" {% if comparar %}checked{% endif %}>
+                <label class="form-check-label" for="comparar">Comparar con otros métodos</label>
             </div>
         </div>
 
-        <button class="btn btn-primary px-4">Calcular</button>
+        <button class="btn btn-primary px-4">
+            <i class="fas fa-calculator"></i> Calcular
+        </button>
+        </div>
     </form>
 
     <hr class="my-4">
 
-    
     {% if mensaje %}
         <div class="alert alert-info">{{ mensaje }}</div>
     {% endif %}
 
-    
+    {% if rho is not None %}
+        <div class="alert alert-secondary mt-3">
+            <strong>Radio espectral ρ(T):</strong> {{ rho|floatformat:6 }} <br>
+
+            {% if converge %}
+                <span class="text-success fw-bold">✔ El método SÍ converge (ρ &lt; 1)</span>
+            {% else %}
+                <span class="text-danger fw-bold">✘ El método NO converge (ρ ≥ 1)</span>
+            {% endif %}
+        </div>
+    {% endif %}
+
     {% if tabla %}
         <h4 class="fw-bold">Tabla de Iteraciones</h4>
 
@@ -134,7 +162,15 @@
                     <tr>
                         <td>{{ fila.0 }}</td>
                         <td>{{ fila.1 }}</td>
-                        <td>{{ fila.2 }}</td>
+
+                        <td>
+                            {% if fila.2 is None %}
+                                N/A
+                            {% else %}
+                                {{ fila.2 }}
+                            {% endif %}
+                        </td>
+
                     </tr>
                 {% endfor %}
             </tbody>
