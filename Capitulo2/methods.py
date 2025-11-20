@@ -148,6 +148,26 @@ def sor(x0, A, b, tol, niter, w, cs):
     return tabla, mensaje
 
 
+def calcular_radio_espectral_metodo(A, metodo, w=None):
+    """Calcula el radio espectral para un método específico"""
+    A = np.array(A, dtype=float)
+    D = np.diag(np.diag(A))
+    L = -np.tril(A, -1)
+    U = -np.triu(A, 1)
+    
+    if metodo == "jacobi":
+        T = np.linalg.inv(D).dot(L + U)
+    elif metodo == "gauss":
+        T = np.linalg.inv(D - L).dot(U)
+    elif metodo == "sor":
+        T = np.linalg.inv(D - w * L).dot((1 - w) * D + w * U)
+    else:
+        return None
+    
+    eig = np.linalg.eigvals(T)
+    return float(max(abs(eig)))
+
+
 def ejecutar_todos(x0, A, b, tol, niter, cs):
     """
     Ejecuta los métodos Jacobi, Gauss-Seidel y SOR con diferentes valores aleatorios de w.
@@ -164,12 +184,25 @@ def ejecutar_todos(x0, A, b, tol, niter, cs):
     resultados: diccionario con resultados de cada método
     """
     resultados = {}
+    A_array = np.array(A, dtype=float)
+    b_array = np.array(b, dtype=float)
     
     # Jacobi
     tabla_jacobi, mensaje_jacobi = jacobi(x0, A, b, tol, niter, cs)
     n_alcanzado = len(tabla_jacobi) - 1
     x_sol = tabla_jacobi[-1][1] if tabla_jacobi else []
-    error_final = tabla_jacobi[-1][2] if tabla_jacobi and len(tabla_jacobi) > 0 and tabla_jacobi[-1][2] is not None else "N/A"
+    error_final = tabla_jacobi[-1][2] if tabla_jacobi and len(tabla_jacobi) > 0 and tabla_jacobi[-1][2] is not None else None
+    
+    # Calcular residual: ||Ax - b||
+    residual = None
+    convergio = False
+    if x_sol:
+        x_sol_array = np.array(x_sol, dtype=float)
+        residual = float(np.linalg.norm(A_array.dot(x_sol_array) - b_array))
+        convergio = error_final is not None and error_final < tol
+    
+    # Calcular radio espectral
+    rho = calcular_radio_espectral_metodo(A, "jacobi")
     
     resultados['Jacobi'] = {
         'tabla': tabla_jacobi,
@@ -177,6 +210,9 @@ def ejecutar_todos(x0, A, b, tol, niter, cs):
         'n_alcanzado': n_alcanzado,
         'x_sol': x_sol,
         'error_final': error_final,
+        'residual': residual,
+        'rho': rho,
+        'convergio': convergio,
         'w': None  # No aplica para Jacobi
     }
     
@@ -184,7 +220,18 @@ def ejecutar_todos(x0, A, b, tol, niter, cs):
     tabla_gauss_seidel, mensaje_gauss_seidel = gauss_seidel(x0, A, b, tol, niter, cs)
     n_alcanzado = len(tabla_gauss_seidel)
     x_sol = tabla_gauss_seidel[-1][1] if tabla_gauss_seidel else []
-    error_final = tabla_gauss_seidel[-1][2] if tabla_gauss_seidel and len(tabla_gauss_seidel) > 0 and tabla_gauss_seidel[-1][2] is not None else "N/A"
+    error_final = tabla_gauss_seidel[-1][2] if tabla_gauss_seidel and len(tabla_gauss_seidel) > 0 and tabla_gauss_seidel[-1][2] is not None else None
+    
+    # Calcular residual
+    residual = None
+    convergio = False
+    if x_sol:
+        x_sol_array = np.array(x_sol, dtype=float)
+        residual = float(np.linalg.norm(A_array.dot(x_sol_array) - b_array))
+        convergio = error_final is not None and error_final < tol
+    
+    # Calcular radio espectral
+    rho = calcular_radio_espectral_metodo(A, "gauss")
     
     resultados['Gauss-Seidel'] = {
         'tabla': tabla_gauss_seidel,
@@ -192,30 +239,176 @@ def ejecutar_todos(x0, A, b, tol, niter, cs):
         'n_alcanzado': n_alcanzado,
         'x_sol': x_sol,
         'error_final': error_final,
+        'residual': residual,
+        'rho': rho,
+        'convergio': convergio,
         'w': None  # No aplica para Gauss-Seidel
     }
     
-    # SOR con diferentes valores aleatorios de w
-    # Generar valores aleatorios de w cercanos a 1 (entre 0.5 y 1.5)
-    valores_w = [
-        round(random.uniform(0.5, 0.9), 2),  # Valor entre 0.5 y 0.9
-        round(random.uniform(1.0, 1.2), 2),  # Valor entre 1.0 y 1.2
-        round(random.uniform(1.3, 1.8), 2)   # Valor entre 1.3 y 1.8
-    ]
+    # SOR con diferentes valores fijos de w
+    valores_w = [0.5, 1.0, 1.5]
     
     for i, w in enumerate(valores_w):
         tabla_sor, mensaje_sor = sor(x0, A, b, tol, niter, w, cs)
         n_alcanzado = len(tabla_sor)
         x_sol = tabla_sor[-1][1] if tabla_sor else []
-        error_final = tabla_sor[-1][2] if tabla_sor and len(tabla_sor) > 0 and tabla_sor[-1][2] is not None else "N/A"
+        error_final = tabla_sor[-1][2] if tabla_sor and len(tabla_sor) > 0 and tabla_sor[-1][2] is not None else None
         
-        resultados[f'SOR{i+1}'] = {
+        # Calcular residual
+        residual = None
+        convergio = False
+        if x_sol:
+            x_sol_array = np.array(x_sol, dtype=float)
+            residual = float(np.linalg.norm(A_array.dot(x_sol_array) - b_array))
+            convergio = error_final is not None and error_final < tol
+        
+        # Calcular radio espectral
+        rho = calcular_radio_espectral_metodo(A, "sor", w=w)
+        
+        resultados[f'SOR_w{w}'] = {
             'tabla': tabla_sor,
             'mensaje': mensaje_sor,
             'n_alcanzado': n_alcanzado,
             'x_sol': x_sol,
             'error_final': error_final,
-            'w': w  # Guardar el valor de w usado
+            'residual': residual,
+            'rho': rho,
+            'convergio': convergio,
+            'w': w
         }
     
+    # Identificar el mejor método
+    mejor_metodo = None
+    menor_iteraciones = float('inf')
+    menor_error = float('inf')
+    
+    for nombre, datos in resultados.items():
+        if datos['error_final'] is not None and datos['n_alcanzado'] != "N/A":
+            n_iter = datos['n_alcanzado']
+            error_final = datos['error_final']
+            
+            # Comparar primero por número de iteraciones, luego por error
+            if n_iter < menor_iteraciones or (n_iter == menor_iteraciones and error_final < menor_error):
+                if mejor_metodo:
+                    resultados[mejor_metodo]['mejor'] = False
+                mejor_metodo = nombre
+                menor_iteraciones = n_iter
+                menor_error = error_final
+                datos['mejor'] = True
+            else:
+                datos['mejor'] = False
+        else:
+            datos['mejor'] = False
+    
     return resultados
+
+
+def comparar_errores_metodo(metodo_nombre, x0, A, b, tol, niter, w=None):
+    """
+    Ejecuta un método específico con error absoluto y error relativo (condición) para comparar.
+    
+    Args:
+        metodo_nombre: Nombre del método ('jacobi', 'gauss_seidel', 'sor')
+        x0: Vector inicial
+        A: Matriz de coeficientes
+        b: Vector de términos independientes
+        tol: Tolerancia
+        niter: Número máximo de iteraciones
+        w: Factor de relajación (solo para SOR)
+    
+    Returns:
+        Lista con resultados para cada tipo de error
+    """
+    tipos_error = [
+        {'nombre': 'Error Absoluto', 'cs': False},
+        {'nombre': 'Error Relativo (Condición)', 'cs': True}
+    ]
+    
+    resultados_comparativos = []
+    A_array = np.array(A, dtype=float)
+    b_array = np.array(b, dtype=float)
+    
+    for tipo in tipos_error:
+        tabla_metodo = []
+        mensaje_metodo = ""
+        
+        # Ejecutar el método según el tipo
+        if metodo_nombre == 'jacobi':
+            tabla_metodo, mensaje_metodo = jacobi(x0, A, b, tol, niter, tipo['cs'])
+        elif metodo_nombre == 'gauss_seidel':
+            tabla_metodo, mensaje_metodo = gauss_seidel(x0, A, b, tol, niter, tipo['cs'])
+        elif metodo_nombre == 'sor':
+            if w is None:
+                w = 1.0  # Valor por defecto
+            tabla_metodo, mensaje_metodo = sor(x0, A, b, tol, niter, w, tipo['cs'])
+        
+        # Procesar resultados
+        if tabla_metodo and len(tabla_metodo) > 0:
+            n_iteraciones = len(tabla_metodo) - 1
+            x_sol = tabla_metodo[-1][1] if tabla_metodo else []
+            error_final = tabla_metodo[-1][2] if n_iteraciones > 0 and tabla_metodo[-1][2] is not None else 0
+            
+            # Calcular residual
+            residual = None
+            convergio = False
+            if x_sol:
+                x_sol_array = np.array(x_sol, dtype=float)
+                residual = float(np.linalg.norm(A_array.dot(x_sol_array) - b_array))
+                convergio = error_final is not None and error_final < tol
+            
+            # Calcular radio espectral
+            rho = None
+            if metodo_nombre == 'jacobi':
+                rho = calcular_radio_espectral_metodo(A, "jacobi")
+            elif metodo_nombre == 'gauss_seidel':
+                rho = calcular_radio_espectral_metodo(A, "gauss")
+            elif metodo_nombre == 'sor' and w is not None:
+                rho = calcular_radio_espectral_metodo(A, "sor", w=w)
+            
+            resultados_comparativos.append({
+                'tipo_error': tipo['nombre'],
+                'tipo_error_key': 'relativo' if tipo['cs'] else 'absoluto',
+                'x_sol': x_sol,
+                'n': n_iteraciones,
+                'error': error_final,
+                'residual': residual,
+                'rho': rho,
+                'convergio': convergio,
+                'mensaje': mensaje_metodo
+            })
+        else:
+            resultados_comparativos.append({
+                'tipo_error': tipo['nombre'],
+                'tipo_error_key': 'relativo' if tipo['cs'] else 'absoluto',
+                'x_sol': "N/A",
+                'n': "N/A",
+                'error': "N/A",
+                'residual': "N/A",
+                'rho': None,
+                'convergio': False,
+                'mensaje': mensaje_metodo
+            })
+    
+    # Identificar el mejor tipo de error
+    mejor_resultado = None
+    menor_iteraciones = float('inf')
+    menor_error = float('inf')
+    
+    for resultado in resultados_comparativos:
+        if resultado['convergio'] and resultado['n'] != "N/A":
+            n_iter = resultado['n']
+            error_final = resultado['error']
+            
+            if n_iter < menor_iteraciones or (n_iter == menor_iteraciones and error_final < menor_error):
+                if mejor_resultado:
+                    mejor_resultado['mejor'] = False
+                mejor_resultado = resultado
+                menor_iteraciones = n_iter
+                menor_error = error_final
+                resultado['mejor'] = True
+            else:
+                resultado['mejor'] = False
+        else:
+            resultado['mejor'] = False
+    
+    return resultados_comparativos

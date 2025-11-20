@@ -1,7 +1,7 @@
 import numpy as np
 from django.shortcuts import render
 from django.contrib import messages
-from .methods import vandermonde_interpolation, newton_interpolation, lagrange_interpolation, spline_interpolation, comparar_metodos_interpolacion
+from .methods import vandermonde_interpolation, newton_interpolation, lagrange_interpolation, spline_interpolation, comparar_metodos_interpolacion, comparar_errores_metodo
 from .graph import graficar
 
 # Create your views here.
@@ -12,6 +12,12 @@ def vandermonde_view(request):
     if request.method == 'POST':
         try:
             num_puntos = int(request.POST.get('num_puntos', 0))
+            
+            # Validar rango de puntos
+            if num_puntos < 2 or num_puntos > 8:
+                messages.error(request, "El número de puntos debe estar entre 2 y 8.")
+                return render(request, 'vandermonde.html', {'num_puntos': 2})
+            
             x_vals = []
             y_vals = []
             for i in range(num_puntos):
@@ -43,6 +49,11 @@ def vandermonde_view(request):
                 resultados_comparacion = comparar_metodos_interpolacion(x, y)
             else:
                 resultados_comparacion = None
+            
+            if request.POST.get('comparar_errores') == 'on':
+                resultados_errores = comparar_errores_metodo('vandermonde', x, y)
+            else:
+                resultados_errores = None
 
             return render(request, 'vandermonde.html', {
                 'poly_str': poly_str,
@@ -51,7 +62,8 @@ def vandermonde_view(request):
                 'x_vals': x_vals,
                 'y_vals': y_vals,
                 'num_puntos': num_puntos,
-                'resultados_comparacion': resultados_comparacion
+                'resultados_comparacion': resultados_comparacion,
+                'resultados_errores': resultados_errores
             })
 
         except ValueError:
@@ -70,6 +82,12 @@ def newton_int_view(request):
     if request.method == 'POST':
         try:
             num_puntos = int(request.POST.get('num_puntos', 0))
+            
+            # Validar rango de puntos
+            if num_puntos < 2 or num_puntos > 8:
+                messages.error(request, "El número de puntos debe estar entre 2 y 8.")
+                return render(request, 'newton_int.html', {'num_puntos': 2})
+            
             x_vals = []
             y_vals = []
             for i in range(num_puntos):
@@ -101,6 +119,11 @@ def newton_int_view(request):
                 resultados_comparacion = comparar_metodos_interpolacion(x, y)
             else:
                 resultados_comparacion = None
+            
+            if request.POST.get('comparar_errores') == 'on':
+                resultados_errores = comparar_errores_metodo('newton', x, y)
+            else:
+                resultados_errores = None
 
             return render(request, 'newton_int.html', {
                 'poly_str': poly_str,
@@ -109,7 +132,8 @@ def newton_int_view(request):
                 'x_vals': x_vals,
                 'y_vals': y_vals,
                 'num_puntos': num_puntos,
-                'resultados_comparacion': resultados_comparacion
+                'resultados_comparacion': resultados_comparacion,
+                'resultados_errores': resultados_errores
             })
 
         except ValueError:
@@ -127,6 +151,12 @@ def lagrange_view(request):
     if request.method == 'POST':
         try:
             num_puntos = int(request.POST.get('num_puntos', 0))
+            
+            # Validar rango de puntos
+            if num_puntos < 2 or num_puntos > 8:
+                messages.error(request, "El número de puntos debe estar entre 2 y 8.")
+                return render(request, 'lagrange.html', {'num_puntos': 2})
+            
             x_vals = []
             y_vals = []
             for i in range(num_puntos):
@@ -158,6 +188,11 @@ def lagrange_view(request):
                 resultados_comparacion = comparar_metodos_interpolacion(x, y)
             else:
                 resultados_comparacion = None
+            
+            if request.POST.get('comparar_errores') == 'on':
+                resultados_errores = comparar_errores_metodo('lagrange', x, y)
+            else:
+                resultados_errores = None
 
             return render(request, 'lagrange.html', {
                 'poly_str': poly_str,
@@ -166,7 +201,8 @@ def lagrange_view(request):
                 'x_vals': x_vals,
                 'y_vals': y_vals,
                 'num_puntos': num_puntos,
-                'resultados_comparacion': resultados_comparacion
+                'resultados_comparacion': resultados_comparacion,
+                'resultados_errores': resultados_errores
             })
 
         except ValueError:
@@ -183,6 +219,12 @@ def spline_view(request):
     if request.method == 'POST':
         try:
             num_puntos = int(request.POST.get('num_puntos', 0))
+            
+            # Validar rango de puntos
+            if num_puntos < 2 or num_puntos > 8:
+                messages.error(request, "El número de puntos debe estar entre 2 y 8.")
+                return render(request, 'spline.html', {'num_puntos': 2})
+            
             x_vals = []
             y_vals = []
             for i in range(num_puntos):
@@ -220,6 +262,12 @@ def spline_view(request):
                 resultados_comparacion = comparar_metodos_interpolacion(x, y)
             else:
                 resultados_comparacion = None
+            
+            if request.POST.get('comparar_errores') == 'on':
+                metodo_nombre = 'spline_lineal' if tipo_spline == 'lineal' else 'spline_cubico'
+                resultados_errores = comparar_errores_metodo(metodo_nombre, x, y, tipo_spline)
+            else:
+                resultados_errores = None
 
             return render(request, 'spline.html', {
                 'poly_str': poly_str,
@@ -229,7 +277,8 @@ def spline_view(request):
                 'y_vals': y_vals,
                 'num_puntos': num_puntos,
                 'tipo_spline': tipo_spline,
-                'resultados_comparacion': resultados_comparacion
+                'resultados_comparacion': resultados_comparacion,
+                'resultados_errores': resultados_errores
             })
 
         except ValueError:

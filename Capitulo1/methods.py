@@ -434,13 +434,14 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, tipo_error='absoluto'):
         })
 
     else:
-        # Añadir mensaje de error
+        # Añadir mensaje de error más descriptivo
+        error_msg = mensaje_biseccion if mensaje_biseccion else "Error: El método no convergió"
         resultados_comparativos.append({
             'metodo': 'Bisección',
             'xs': "N/A",
             'n': "N/A",
             'error': "N/A",
-            'info': mensaje_biseccion  # "Intervalo inadecuado"
+            'info': error_msg
         })
     
     # Regla Falsa
@@ -456,13 +457,14 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, tipo_error='absoluto'):
         })
 
     else:
-        # Añadir mensaje de error
+        # Añadir mensaje de error más descriptivo
+        error_msg = mensaje_regla_falsa if mensaje_regla_falsa else "Error: El método no convergió"
         resultados_comparativos.append({
             'metodo': 'Regla Falsa',
             'xs': "N/A",
             'n': "N/A",
             'error': "N/A",
-            'info': mensaje_regla_falsa
+            'info': error_msg
         })
     
     # Punto Fijo
@@ -484,13 +486,14 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, tipo_error='absoluto'):
         })
 
     else:
-        # Añadir mensaje de error
+        # Añadir mensaje de error más descriptivo
+        error_msg = mensaje_punto_fijo if mensaje_punto_fijo else "Error: El método no convergió"
         resultados_comparativos.append({
             'metodo': 'Punto Fijo',
             'xs': "N/A",
             'n': "N/A",
             'error': "N/A",
-            'info': mensaje_punto_fijo
+            'info': error_msg
         })
 
     # Newton-Raphson
@@ -506,13 +509,14 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, tipo_error='absoluto'):
         })
 
     else:
-        # Añadir mensaje de error
+        # Añadir mensaje de error más descriptivo
+        error_msg = mensaje_newton if mensaje_newton else "Error: El método no convergió"
         resultados_comparativos.append({
             'metodo': 'Newton',
             'xs': "N/A",
             'n': "N/A",
             'error': "N/A",
-            'info': mensaje_newton
+            'info': error_msg
         })
     
     # Secante
@@ -530,13 +534,14 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, tipo_error='absoluto'):
         })
 
     else:
-        # Añadir mensaje de error
+        # Añadir mensaje de error más descriptivo
+        error_msg = mensaje_secante if mensaje_secante else "Error: El método no convergió"
         resultados_comparativos.append({
             'metodo': 'Secante',
             'xs': "N/A",
             'n': "N/A",
             'error': "N/A",
-            'info': mensaje_secante
+            'info': error_msg
         })
     
     # Raíces Múltiples
@@ -552,13 +557,14 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, tipo_error='absoluto'):
         })
 
     else:
-        # Añadir mensaje de error
+        # Añadir mensaje de error más descriptivo
+        error_msg = mensaje_rm if mensaje_rm else "Error: El método no convergió"
         resultados_comparativos.append({
             'metodo': 'Raíces Múltiples',
             'xs': "N/A",
             'n': "N/A",
             'error': "N/A",
-            'info': mensaje_rm
+            'info': error_msg
         })
     
     # Identificar el mejor método
@@ -582,5 +588,111 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, tipo_error='absoluto'):
                 resultado['mejor'] = True
             else:
                 resultado['mejor'] = False
+    
+    return resultados_comparativos
+
+
+def comparar_errores_metodo(metodo_nombre, f_str, g_str, xi, xs, tol, niter, x1):
+    """
+    Ejecuta un método específico con los 3 tipos de errores y compara los resultados.
+    
+    Args:
+        metodo_nombre: Nombre del método ('biseccion', 'regla_falsa', 'punto_fijo', 'newton', 'secante', 'raices_multiples')
+        f_str: Función como string
+        g_str: Función g para punto fijo (opcional)
+        xi: Límite inferior o valor inicial
+        xs: Límite superior (para métodos cerrados)
+        tol: Tolerancia
+        niter: Número máximo de iteraciones
+        x1: Segundo valor inicial (para secante)
+    
+    Returns:
+        Lista con resultados para cada tipo de error
+    """
+    tipos_error = ['absoluto', 'relativo', 'condicion']
+    resultados_comparativos = []
+    
+    for tipo_error in tipos_error:
+        resultado_metodo = None
+        tabla_metodo = []
+        mensaje_metodo = ""
+        
+        if metodo_nombre == 'biseccion':
+            tabla_metodo, resultado_metodo, mensaje_metodo = biseccion(f_str, xi, xs, tol, niter, tipo_error)
+        elif metodo_nombre == 'regla_falsa':
+            tabla_metodo, resultado_metodo, mensaje_metodo = regla_falsa(f_str, xi, xs, tol, niter, tipo_error)
+        elif metodo_nombre == 'punto_fijo':
+            x0 = xi
+            if g_str is None:
+                g_str, _ = calcular_funcion_g_optima(f_str, x0)
+            resultado_metodo, tabla_metodo, mensaje_metodo = punto_fijo(x0, tol, niter, f_str, g_str, tipo_error)
+        elif metodo_nombre == 'newton':
+            x0 = xi
+            resultado_metodo, tabla_metodo, mensaje_metodo = newton_raphson(x0, tol, niter, f_str, tipo_error)
+        elif metodo_nombre == 'secante':
+            x0 = xi
+            if x1 is None:
+                x1 = x0 + 1
+            resultado_metodo, tabla_metodo, mensaje_metodo = secante(x0, x1, tol, niter, f_str, tipo_error)
+        elif metodo_nombre == 'raices_multiples':
+            x0 = xi
+            resultado_metodo, tabla_metodo, mensaje_metodo = raices_multiples(x0, tol, niter, f_str, tipo_error)
+        
+        # Procesar resultados
+        if resultado_metodo is not None and tabla_metodo:
+            n_iteraciones = len(tabla_metodo) - 1
+            error_final = tabla_metodo[-1][3] if n_iteraciones > 0 and tabla_metodo[-1][3] is not None else 0
+            
+            # Nombre descriptivo del tipo de error
+            nombre_error = {
+                'absoluto': 'Error Absoluto',
+                'relativo': 'Error Relativo',
+                'condicion': 'Error de Condición'
+            }
+            
+            resultados_comparativos.append({
+                'tipo_error': nombre_error[tipo_error],
+                'tipo_error_key': tipo_error,
+                'xs': resultado_metodo,
+                'n': n_iteraciones,
+                'error': error_final,
+                'convergio': True
+            })
+        else:
+            nombre_error = {
+                'absoluto': 'Error Absoluto',
+                'relativo': 'Error Relativo',
+                'condicion': 'Error de Condición'
+            }
+            resultados_comparativos.append({
+                'tipo_error': nombre_error[tipo_error],
+                'tipo_error_key': tipo_error,
+                'xs': "N/A",
+                'n': "N/A",
+                'error': "N/A",
+                'convergio': False
+            })
+    
+    # Identificar el mejor tipo de error (menor número de iteraciones, luego menor error)
+    mejor_resultado = None
+    menor_iteraciones = float('inf')
+    menor_error = float('inf')
+    
+    for resultado in resultados_comparativos:
+        if resultado['convergio'] and resultado['n'] != "N/A":
+            n_iter = resultado['n']
+            error_final = resultado['error']
+            
+            if n_iter < menor_iteraciones or (n_iter == menor_iteraciones and error_final < menor_error):
+                if mejor_resultado:
+                    mejor_resultado['mejor'] = False
+                mejor_resultado = resultado
+                menor_iteraciones = n_iter
+                menor_error = error_final
+                resultado['mejor'] = True
+            else:
+                resultado['mejor'] = False
+        else:
+            resultado['mejor'] = False
     
     return resultados_comparativos

@@ -25,6 +25,8 @@
             <li>Requiere que la matriz A sea diagonalmente dominante o convergente.</li>
             <li>Fórmula: <code>x^(k+1) = (D - L)^(-1)(Ux^(k) + b)</code></li>
             <li>Converge más rápido que Jacobi cuando la matriz es apropiada.</li>
+            <li><strong>Ingreso de datos:</strong> Complete la matriz A fila por fila, luego el vector b y el vector inicial x₀.</li>
+            <li><strong>Tamaño máximo:</strong> Matrices de hasta 7×7.</li>
         </ul>
     </div>
 
@@ -34,7 +36,15 @@
 
         <div class="mb-3">
             <label class="fw-bold">Tamaño de la matriz A (n × n)</label>
-            <input type="number" name="matrix_size" min="2" value="{{ matrix_size }}" class="form-control">
+            <select name="matrix_size" class="form-select" required>
+                <option value="" disabled {% if not matrix_size %}selected{% endif %}>Seleccione el tamaño</option>
+                <option value="2" {% if matrix_size == 2 %}selected{% endif %}>2x2</option>
+                <option value="3" {% if matrix_size == 3 %}selected{% endif %}>3x3</option>
+                <option value="4" {% if matrix_size == 4 %}selected{% endif %}>4x4</option>
+                <option value="5" {% if matrix_size == 5 %}selected{% endif %}>5x5</option>
+                <option value="6" {% if matrix_size == 6 %}selected{% endif %}>6x6</option>
+                <option value="7" {% if matrix_size == 7 %}selected{% endif %}>7x7</option>
+            </select>
         </div>
 
         <hr>
@@ -121,6 +131,11 @@
                 <input class="form-check-input" type="checkbox" name="comparar" id="comparar" {% if comparar %}checked{% endif %}>
                 <label class="form-check-label" for="comparar">Comparar con otros métodos</label>
             </div>
+            
+            <div class="form-check mt-3">
+                <input class="form-check-input" type="checkbox" id="comparar_errores" name="comparar_errores">
+                <label class="form-check-label" for="comparar_errores">Comparar tipos de error (Absoluto vs Relativo)</label>
+            </div>
         </div>
 
         <button class="btn btn-primary px-4">
@@ -174,6 +189,135 @@
                 {% endfor %}
             </tbody>
         </table>
+    {% endif %}
+
+    {% if resultados_todos %}
+    <hr class="my-4">
+    <h3 class="mb-3">Informe Comparativo</h3>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Método</th>
+                    <th>Solución</th>
+                    <th>Iteraciones</th>
+                    <th>Convergió</th>
+                    <th>Radio Espectral</th>
+                    <th>Puede Converger</th>
+                    <th>Error Final</th>
+                    <th>Residual Final</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for metodo, datos in resultados_todos.items %}
+                <tr {% if datos.mejor %}class="table-success fw-bold"{% endif %}>
+                    <td>{{ metodo }}</td>
+                    <td>
+                        {% if datos.x_sol %}
+                            [{% for val in datos.x_sol %}{{ val|floatformat:6 }}{% if not forloop.last %}, {% endif %}{% endfor %}]
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ datos.n_alcanzado }}</td>
+                    <td>
+                        {% if datos.convergio %}
+                            <span class="text-success">Sí</span>
+                        {% else %}
+                            <span class="text-danger">No</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if datos.rho %}
+                            {{ datos.rho|stringformat:".8f" }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if datos.rho < 1 %}
+                            <span class="text-success">Sí</span>
+                        {% else %}
+                            <span class="text-danger">No</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if datos.error_final %}
+                            {{ datos.error_final|stringformat:".4e" }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if datos.residual %}
+                            {{ datos.residual|stringformat:".4e" }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if datos.mejor %}
+                            <span class="text-success fw-bold">✓ Mejor método</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="text-muted small">
+        <strong>💡 Criterio de selección:</strong> El mejor método (fila en verde con ✓) es el que converge en menos iteraciones con el menor error.
+    </p>
+    {% endif %}
+    
+    {% if resultados_errores %}
+    <h3 class="mb-3">Comparación de Tipos de Error</h3>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Tipo de Error</th>
+                    <th>Solución (x)</th>
+                    <th>Iteraciones (n)</th>
+                    <th>Error Final</th>
+                    <th>Residual</th>
+                    <th>Radio Espectral (ρ)</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for res in resultados_errores %}
+                <tr {% if res.mejor %}class="table-success fw-bold"{% endif %}>
+                    <td>{{ res.tipo_error }}</td>
+                    <td>
+                        {% for val in res.solucion %}
+                            {{ val|stringformat:".6f" }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>{{ res.n }}</td>
+                    <td>{{ res.error|stringformat:".6e" }}</td>
+                    <td>{{ res.residual|stringformat:".6e" }}</td>
+                    <td>{{ res.radio_espectral|stringformat:".6f" }}</td>
+                    <td>
+                        {% if res.mejor %}
+                            <span class="text-success fw-bold">✓ Mejor tipo de error</span>
+                        {% elif not res.convergio %}
+                            <span class="text-danger">No convergió</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="text-muted small">
+        <strong>💡 Criterio:</strong> El mejor tipo de error es el que permite convergencia en menos iteraciones con menor error final.
+    </p>
     {% endif %}
 
 </div>

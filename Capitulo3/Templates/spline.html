@@ -29,11 +29,18 @@
             {% csrf_token %}
             
             <div class="mb-3">
-                <label class="form-label fw-bold">Número de puntos (2-8):</label>
-                <input type="number" id="num_puntos" name="num_puntos" class="form-control" 
-                       min="2" max="8" value="{{ num_puntos|default:'2' }}" 
-                       onchange="updatePointInputs()" required>
-                <small class="text-muted">Ingrese entre 2 y 8 puntos para interpolar</small>
+                <label class="form-label fw-bold">Número de puntos:</label>
+                <select id="num_puntos" name="num_puntos" class="form-select" onchange="updatePointInputs()" required>
+                    <option value="" disabled {% if not num_puntos %}selected{% endif %}>Seleccione la cantidad</option>
+                    <option value="2" {% if num_puntos == 2 %}selected{% endif %}>2 puntos</option>
+                    <option value="3" {% if num_puntos == 3 %}selected{% endif %}>3 puntos</option>
+                    <option value="4" {% if num_puntos == 4 %}selected{% endif %}>4 puntos</option>
+                    <option value="5" {% if num_puntos == 5 %}selected{% endif %}>5 puntos</option>
+                    <option value="6" {% if num_puntos == 6 %}selected{% endif %}>6 puntos</option>
+                    <option value="7" {% if num_puntos == 7 %}selected{% endif %}>7 puntos</option>
+                    <option value="8" {% if num_puntos == 8 %}selected{% endif %}>8 puntos</option>
+                </select>
+                <small class="text-muted">Seleccione entre 2 y 8 puntos para interpolar</small>
             </div>
 
             <div class="mb-3">
@@ -63,6 +70,13 @@
                 <input class="form-check-input" type="checkbox" id="comparar" name="comparar">
                 <label class="form-check-label" for="comparar">
                     Comparar con otros métodos de interpolación
+                </label>
+            </div>
+            
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="comparar_errores" name="comparar_errores">
+                <label class="form-check-label" for="comparar_errores">
+                    Comparar tipos de error (Absoluto vs Relativo)
                 </label>
             </div>
 
@@ -135,29 +149,90 @@
         Los errores promedio y máximos se calculan evaluando el polinomio en todos los puntos originales.
     </p>
     {% endif %}
+    
+    {% if resultados_errores %}
+    <h3 class="mb-3">Comparación de Tipos de Error</h3>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Tipo de Error</th>
+                    <th>Error Puntual</th>
+                    <th>Error Promedio</th>
+                    <th>Error Máximo</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for res in resultados_errores %}
+                <tr {% if res.mejor %}class="table-success fw-bold"{% endif %}>
+                    <td>{{ res.tipo_error }}</td>
+                    <td>{{ res.error_puntual|floatformat:6 }}</td>
+                    <td>{{ res.error_promedio|stringformat:".6e" }}</td>
+                    <td>{{ res.error_max|stringformat:".6e" }}</td>
+                    <td>
+                        {% if res.mejor %}
+                            <span class="text-success fw-bold">✓ Mejor tipo de error</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="text-muted small">
+        <strong>💡 Criterio:</strong> El mejor tipo de error es el que tiene menor error promedio en todos los puntos.
+    </p>
+    {% endif %}
     {% endif %}
 
 </div>
 
 {% block scripts %}
 <script>
+    // Valores previos desde el servidor
+    const xVals = {{ x_vals|default:"[]"|safe }};
+    const yVals = {{ y_vals|default:"[]"|safe }};
+    
     function updatePointInputs() {
         const numPuntos = parseInt(document.getElementById('num_puntos').value) || 2;
         const container = document.getElementById('points-container');
         container.innerHTML = '';
         
+        // Crear dos columnas: una para x y otra para y
+        const colX = document.createElement('div');
+        colX.className = 'col-md-6';
+        let htmlX = '<h5 class="mb-3">Valores de X</h5>';
+        
+        const colY = document.createElement('div');
+        colY.className = 'col-md-6';
+        let htmlY = '<h5 class="mb-3">Valores de Y</h5>';
+        
         for (let i = 0; i < numPuntos; i++) {
-            const div = document.createElement('div');
-            div.className = 'col-md-6 mb-2';
-            div.innerHTML = `
-                <div class="input-group">
-                    <span class="input-group-text">Punto ${i}</span>
-                    <input type="number" step="any" name="x_${i}" class="form-control" placeholder="x${i}" required>
-                    <input type="number" step="any" name="y_${i}" class="form-control" placeholder="y${i}" required>
+            const xValue = (xVals[i] !== undefined) ? xVals[i] : '';
+            const yValue = (yVals[i] !== undefined) ? yVals[i] : '';
+            
+            htmlX += `
+                <div class="input-group mb-2">
+                    <span class="input-group-text">x${i+1}</span>
+                    <input type="number" step="any" name="x_${i}" class="form-control" placeholder="Valor de x${i+1}" value="${xValue}" required>
                 </div>
             `;
-            container.appendChild(div);
+            
+            htmlY += `
+                <div class="input-group mb-2">
+                    <span class="input-group-text">y${i+1}</span>
+                    <input type="number" step="any" name="y_${i}" class="form-control" placeholder="Valor de y${i+1}" value="${yValue}" required>
+                </div>
+            `;
         }
+        
+        colX.innerHTML = htmlX;
+        colY.innerHTML = htmlY;
+        container.appendChild(colX);
+        container.appendChild(colY);
     }
     
     window.onload = function() {

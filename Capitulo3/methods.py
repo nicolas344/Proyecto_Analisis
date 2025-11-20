@@ -497,3 +497,110 @@ def comparar_metodos_interpolacion(x, y):
         resultados[mejor_idx]['mejor'] = True
     
     return resultados
+
+
+def comparar_errores_metodo(metodo_nombre, x, y, tipo_spline=None):
+    """
+    Compara un método de interpolación usando error absoluto vs error relativo.
+    
+    Args:
+        metodo_nombre: nombre del método ('vandermonde', 'newton', 'lagrange', 'spline_lineal', 'spline_cubico')
+        x: vector de puntos x
+        y: vector de puntos y
+        tipo_spline: tipo de spline si el método es spline ('lineal' o 'cubico')
+    
+    Returns:
+        Lista de diccionarios con los resultados de cada tipo de error
+    """
+    resultados = []
+    
+    # Verificar que hay suficientes puntos
+    if len(x) < 3:
+        return []
+    
+    # Seleccionar el método a ejecutar
+    if metodo_nombre == 'vandermonde':
+        metodo_func = lambda: vandermonde_interpolation(x, y, 1)
+    elif metodo_nombre == 'newton':
+        metodo_func = lambda: newton_interpolation(x, y, 1)
+    elif metodo_nombre == 'lagrange':
+        metodo_func = lambda: lagrange_interpolation(x, y, 1)
+    elif metodo_nombre == 'spline_lineal':
+        metodo_func = lambda: spline_interpolation(x, y, 'lineal')
+    elif metodo_nombre == 'spline_cubico':
+        metodo_func = lambda: spline_interpolation(x, y, 'cubico')
+    else:
+        return []
+    
+    # Ejecutar el método una vez para obtener los resultados base
+    try:
+        resultado = metodo_func()
+        
+        # Extraer información según el método
+        if metodo_nombre in ['vandermonde', 'newton']:
+            coef, polinomio, x_eval, p_eval, error_msg = resultado
+        else:  # lagrange y splines
+            polinomio, x_eval, p_eval, error_msg = resultado
+        
+        # Extraer el error puntual del mensaje
+        import re
+        match = re.search(r'error\s*=\s*([\d.]+)', error_msg)
+        error_puntual = float(match.group(1)) if match else 0.0
+        
+        # Calcular errores ABSOLUTOS en todos los puntos originales
+        errores_abs = []
+        for i in range(len(x)):
+            idx = np.argmin(np.abs(x_eval - x[i]))
+            y_interp = p_eval[idx]
+            error_abs = abs(y[i] - y_interp)
+            errores_abs.append(error_abs)
+        
+        error_abs_promedio = np.mean(errores_abs) if errores_abs else 0.0
+        error_abs_max = np.max(errores_abs) if errores_abs else 0.0
+        
+        resultados.append({
+            'tipo_error': 'Absoluto',
+            'polinomio': polinomio,
+            'error_puntual': error_puntual,
+            'error_promedio': error_abs_promedio,
+            'error_max': error_abs_max,
+            'convergio': True,
+            'mejor': False
+        })
+        
+        # Calcular errores RELATIVOS en todos los puntos originales
+        errores_rel = []
+        for i in range(len(x)):
+            idx = np.argmin(np.abs(x_eval - x[i]))
+            y_interp = p_eval[idx]
+            
+            if y[i] != 0:
+                error_rel = abs((y[i] - y_interp) / y[i])
+                errores_rel.append(error_rel)
+            else:
+                # Si y[i] es 0, usar error absoluto
+                errores_rel.append(abs(y[i] - y_interp))
+        
+        error_rel_promedio = np.mean(errores_rel) if errores_rel else 0.0
+        error_rel_max = np.max(errores_rel) if errores_rel else 0.0
+        
+        resultados.append({
+            'tipo_error': 'Relativo',
+            'polinomio': polinomio,
+            'error_puntual': error_puntual,
+            'error_promedio': error_rel_promedio,
+            'error_max': error_rel_max,
+            'convergio': True,
+            'mejor': False
+        })
+        
+        # Determinar cuál es mejor (menor error promedio)
+        if resultados:
+            mejor_idx = 0 if resultados[0]['error_promedio'] <= resultados[1]['error_promedio'] else 1
+            resultados[mejor_idx]['mejor'] = True
+            
+    except Exception as e:
+        # Si hay error, devolver resultados vacíos
+        return []
+    
+    return resultados
