@@ -2,7 +2,39 @@ from sympy import symbols, sympify, Symbol, diff
 from sympy.utilities.lambdify import lambdify
 import numpy as np
 
-def biseccion(f_expr_str, xi, xs, Tol, niter, cs):
+def calcular_error(x_nuevo, x_anterior, tipo_error):
+    """
+    Calcula el error según el tipo especificado.
+    
+    Args:
+        x_nuevo: Valor actual de la aproximación
+        x_anterior: Valor anterior de la aproximación
+        tipo_error: 'absoluto', 'relativo' o 'condicion'
+    
+    Returns:
+        Error calculado según el tipo
+    """
+    if tipo_error == 'absoluto':
+        return abs(x_nuevo - x_anterior)
+    elif tipo_error == 'relativo':
+        if x_nuevo == 0:
+            return float('inf')
+        return abs((x_nuevo - x_anterior) / x_nuevo)
+    elif tipo_error == 'condicion':
+        # Error de condición: |f(x_nuevo)| / |x_nuevo|
+        # Para métodos que no tienen f(x) disponible, usar error relativo
+        return abs((x_nuevo - x_anterior) / x_nuevo) if x_nuevo != 0 else float('inf')
+    else:
+        # Por defecto, usar error absoluto
+        return abs(x_nuevo - x_anterior)
+
+def biseccion(f_expr_str, xi, xs, Tol, niter, tipo_error='absoluto'):
+    """
+    Método de Bisección para encontrar raíces.
+    
+    Args:
+        tipo_error: 'absoluto', 'relativo' o 'condicion'
+    """
     x = symbols('x')
     f_expr = sympify(f_expr_str)
     f = lambdify(x, f_expr, 'math')
@@ -37,10 +69,14 @@ def biseccion(f_expr_str, xi, xs, Tol, niter, cs):
             xa = xm
             xm = (xi + xs) / 2
             fe = f(xm)
-            if cs:
-                error = abs((xm - xa)/xm)
+            
+            # Calcular error según el tipo especificado
+            if tipo_error == 'condicion':
+                # Error de condición: |f(xm)| (cuánto se aleja de cero)
+                error = abs(fe)
             else:
-                error = abs(xm - xa)
+                error = calcular_error(xm, xa, tipo_error)
+            
             c += 1
             resultados.append((c, xm, fe, error))
 
@@ -54,7 +90,13 @@ def biseccion(f_expr_str, xi, xs, Tol, niter, cs):
     else:
         return [], None, "Intervalo inadecuado"
 
-def regla_falsa(f_str, xi, xs, tol, niter, cs):
+def regla_falsa(f_str, xi, xs, tol, niter, tipo_error='absoluto'):
+    """
+    Método de Regla Falsa para encontrar raíces.
+    
+    Args:
+        tipo_error: 'absoluto', 'relativo' o 'condicion'
+    """
     x = Symbol('x')
     f_expr = sympify(f_str)
     f = lambdify(x, f_expr, 'math')  # 'math' para coherencia con bisección
@@ -88,10 +130,13 @@ def regla_falsa(f_str, xi, xs, tol, niter, cs):
             xm_old = xm
             xm = xs - fxs * (xi - xs) / (fxi - fxs)
             fxm = f(xm)
-            if cs:
-                error = abs((xm - xm_old) / xm)
+            
+            # Calcular error según el tipo especificado
+            if tipo_error == 'condicion':
+                error = abs(fxm)
             else:
-                error = abs(xm - xm_old)
+                error = calcular_error(xm, xm_old, tipo_error)
+            
             c += 1
             tabla.append((c, xm, fxm, error))
 
@@ -105,7 +150,13 @@ def regla_falsa(f_str, xi, xs, tol, niter, cs):
     else:
         return [], None, "Intervalo inadecuado"
 
-def punto_fijo(x0, tol, niter, f_str, g_str, cs):
+def punto_fijo(x0, tol, niter, f_str, g_str, tipo_error='absoluto'):
+    """
+    Método de Punto Fijo para encontrar raíces.
+    
+    Args:
+        tipo_error: 'absoluto', 'relativo' o 'condicion'
+    """
     x = symbols('x')
     f_expr = sympify(f_str)
     g_expr = sympify(g_str)
@@ -124,10 +175,13 @@ def punto_fijo(x0, tol, niter, f_str, g_str, cs):
     while error > tol and fxn != 0 and c < niter:
         x_next = g(xn)
         fxn = f(x_next)
-        if cs:
-            error = abs((x_next - xn) / x_next)
+        
+        # Calcular error según el tipo especificado
+        if tipo_error == 'condicion':
+            error = abs(fxn)
         else:
-            error = abs(x_next - xn)  # Error absoluto
+            error = calcular_error(x_next, xn, tipo_error)
+        
         xn = x_next
         c += 1
         tabla.append((c, xn, fxn, error))
@@ -141,7 +195,13 @@ def punto_fijo(x0, tol, niter, f_str, g_str, cs):
 
     return xn, tabla, mensaje
 
-def newton_raphson(x0, tol, niter, f_str, cs):
+def newton_raphson(x0, tol, niter, f_str, tipo_error='absoluto'):
+    """
+    Método de Newton-Raphson para encontrar raíces.
+    
+    Args:
+        tipo_error: 'absoluto', 'relativo' o 'condicion'
+    """
     x = symbols('x')
     f_expr = sympify(f_str)
     df_expr = diff(f_expr, x)
@@ -162,10 +222,13 @@ def newton_raphson(x0, tol, niter, f_str, cs):
         x_next = xn - fxn / dfxn
         fxn = f(x_next)
         dfxn = df(x_next)
-        if cs:
-            error = abs((x_next - xn) / x_next)
+        
+        # Calcular error según el tipo especificado
+        if tipo_error == 'condicion':
+            error = abs(fxn)
         else:
-            error = abs(x_next - xn)
+            error = calcular_error(x_next, xn, tipo_error)
+        
         xn = x_next
         c += 1
         tabla.append((c, xn, fxn, error))
@@ -182,7 +245,13 @@ def newton_raphson(x0, tol, niter, f_str, cs):
 
     return xn, tabla, mensaje
 
-def secante(x0, x1, tol, niter, f_str, cs):
+def secante(x0, x1, tol, niter, f_str, tipo_error='absoluto'):
+    """
+    Método de la Secante para encontrar raíces.
+    
+    Args:
+        tipo_error: 'absoluto', 'relativo' o 'condicion'
+    """
     x = symbols('x')
     f_expr = sympify(f_str)
     f = lambdify(x, f_expr, modules=["numpy"])
@@ -204,10 +273,12 @@ def secante(x0, x1, tol, niter, f_str, cs):
             break
 
         fx_next = f(x_next)
-        if cs:
-            error = abs((x_next - xn[-1]) / x_next)
+        
+        # Calcular error según el tipo especificado
+        if tipo_error == 'condicion':
+            error = abs(fx_next)
         else:
-            error = abs(x_next - xn[-1])
+            error = calcular_error(x_next, xn[-1], tipo_error)
 
         xn.append(x_next)
         fm.append(fx_next)
@@ -226,7 +297,13 @@ def secante(x0, x1, tol, niter, f_str, cs):
 
     return xn[-1], tabla, mensaje
 
-def raices_multiples(x0, tol, niter, f_str, cs):
+def raices_multiples(x0, tol, niter, f_str, tipo_error='absoluto'):
+    """
+    Método de Raíces Múltiples para encontrar raíces con multiplicidad > 1.
+    
+    Args:
+        tipo_error: 'absoluto', 'relativo' o 'condicion'
+    """
     x = symbols('x')
     f_expr = sympify(f_str)
     df_expr = diff(f_expr, x)
@@ -250,10 +327,14 @@ def raices_multiples(x0, tol, niter, f_str, cs):
         if denom == 0:
             break
         x1 = x0 - (fx * dfx) / denom
-        if cs:
-            error = abs((x1 - x0) / x1)
+        
+        # Calcular error según el tipo especificado
+        if tipo_error == 'condicion':
+            fx_temp = f(x1)
+            error = abs(fx_temp)
         else:
-            error = abs(x1 - x0)
+            error = calcular_error(x1, x0, tipo_error)
+        
         x0 = x1
         fx = f(x0)
         dfx = df(x0)
@@ -318,9 +399,16 @@ def calcular_funcion_g_optima(f_str, x0):
     
     return g_str, convergencia_info
 
-def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, cs):
+def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, tipo_error='absoluto'):
     """
-    Ejecuta todos los métodos y devuelve los resultados.
+    Ejecuta todos los métodos y devuelve los resultados comparativos.
+    Identifica automáticamente el mejor método.
+    
+    Args:
+        tipo_error: 'absoluto', 'relativo' o 'condicion'
+    
+    Returns:
+        Lista de resultados con el mejor método marcado
     """
     resultados_comparativos = []
 
@@ -334,7 +422,7 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, cs):
     resultados = {}
     
     # Bisección
-    tabla_biseccion, resultado_biseccion, mensaje_biseccion = biseccion(f_str, xi, xs, tol, niter, cs)
+    tabla_biseccion, resultado_biseccion, mensaje_biseccion = biseccion(f_str, xi, xs, tol, niter, tipo_error)
     if resultado_biseccion is not None:
         n_biseccion = len(tabla_biseccion) - 1
         error_biseccion = tabla_biseccion[-1][3] if n_biseccion > 0 and tabla_biseccion[-1][3] is not None else "N/A"
@@ -356,7 +444,7 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, cs):
         })
     
     # Regla Falsa
-    tabla_regla_falsa, resultado_regla_falsa, mensaje_regla_falsa = regla_falsa(f_str, xi, xs, tol, niter, cs)
+    tabla_regla_falsa, resultado_regla_falsa, mensaje_regla_falsa = regla_falsa(f_str, xi, xs, tol, niter, tipo_error)
     if resultado_regla_falsa is not None:
         n_regla_falsa = len(tabla_regla_falsa) - 1
         error_regla_falsa = tabla_regla_falsa[-1][3] if n_regla_falsa > 0 and tabla_regla_falsa[-1][3] is not None else "N/A"
@@ -382,7 +470,7 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, cs):
         g_str, convergencia_info = calcular_funcion_g_optima(f_str, x0)
     else:
         convergencia_info = "Función g proporcionada por el usuario"
-    resultado_punto_fijo, tabla_punto_fijo, mensaje_punto_fijo = punto_fijo(x0, tol, niter, f_str, g_str, cs)
+    resultado_punto_fijo, tabla_punto_fijo, mensaje_punto_fijo = punto_fijo(x0, tol, niter, f_str, g_str, tipo_error)
     if resultado_punto_fijo is not None:
         n_punto_fijo = len(tabla_punto_fijo) - 1
         error_punto_fijo = tabla_punto_fijo[-1][3] if n_punto_fijo > 0 and tabla_punto_fijo[-1][3] is not None else "N/A"
@@ -406,7 +494,7 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, cs):
         })
 
     # Newton-Raphson
-    resultado_newton, tabla_newton, mensaje_newton = newton_raphson(x0, tol, niter, f_str, cs)
+    resultado_newton, tabla_newton, mensaje_newton = newton_raphson(x0, tol, niter, f_str, tipo_error)
     if resultado_newton is not None:
         n_newton = len(tabla_newton) - 1
         error_newton = tabla_newton[-1][3] if n_newton > 0 and tabla_newton[-1][3] is not None else "N/A"
@@ -430,7 +518,7 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, cs):
     # Secante
     if x1 is None:
         x1 = x0 + 1
-    resultado_secante, tabla_secante, mensaje_secante = secante(x0, x1, tol, niter, f_str, cs)
+    resultado_secante, tabla_secante, mensaje_secante = secante(x0, x1, tol, niter, f_str, tipo_error)
     if resultado_secante is not None:
         n_secante = len(tabla_secante) - 1
         error_secante = tabla_secante[-1][3] if n_secante > 0 and tabla_secante[-1][3] is not None else "N/A"
@@ -452,7 +540,7 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, cs):
         })
     
     # Raíces Múltiples
-    resultado_rm, tabla_rm, mensaje_rm = raices_multiples(x0, tol, niter, f_str, cs)
+    resultado_rm, tabla_rm, mensaje_rm = raices_multiples(x0, tol, niter, f_str, tipo_error)
     if resultado_rm is not None:
         n_rm = len(tabla_rm) - 1
         error_rm = tabla_rm[-1][3] if n_rm > 0 and tabla_rm[-1][3] is not None else "N/A"
@@ -466,11 +554,33 @@ def ejecutar_todos(f_str, g_str, xi, xs, tol, niter, x1, cs):
     else:
         # Añadir mensaje de error
         resultados_comparativos.append({
-            'metodo': 'Secante',
+            'metodo': 'Raíces Múltiples',
             'xs': "N/A",
             'n': "N/A",
             'error': "N/A",
             'info': mensaje_rm
         })
+    
+    # Identificar el mejor método
+    # Criterios: 1) Menor número de iteraciones, 2) Menor error final
+    mejor_metodo = None
+    menor_iteraciones = float('inf')
+    menor_error = float('inf')
+    
+    for resultado in resultados_comparativos:
+        if resultado['n'] != "N/A" and resultado['error'] != "N/A":
+            n_iter = resultado['n']
+            error_final = resultado['error']
+            
+            # Comparar primero por número de iteraciones, luego por error
+            if n_iter < menor_iteraciones or (n_iter == menor_iteraciones and error_final < menor_error):
+                if mejor_metodo:
+                    mejor_metodo['mejor'] = False
+                mejor_metodo = resultado
+                menor_iteraciones = n_iter
+                menor_error = error_final
+                resultado['mejor'] = True
+            else:
+                resultado['mejor'] = False
     
     return resultados_comparativos

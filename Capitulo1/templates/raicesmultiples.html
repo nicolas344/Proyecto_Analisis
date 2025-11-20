@@ -176,9 +176,26 @@
                    value="{{ niter|default:'100' }}" required>
         </div>
 
-        <div class="checkbox-group">
-            <input type="checkbox" id="usar_cifras" name="usar_cifras">
-            <label for="usar_cifras">Usar error de cifras significativas</label>
+        <div class="form-group">
+            <label>Tipo de Error:</label>
+            <div style="display: flex; gap: 15px; margin-top: 8px;">
+                <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
+                    <input type="radio" name="tipo_error" value="absoluto" 
+                           {% if tipo_error == 'absoluto' or not tipo_error %}checked{% endif %}>
+                    Error Absoluto
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
+                    <input type="radio" name="tipo_error" value="relativo" 
+                           {% if tipo_error == 'relativo' %}checked{% endif %}>
+                    Error Relativo
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
+                    <input type="radio" name="tipo_error" value="condicion" 
+                           {% if tipo_error == 'condicion' %}checked{% endif %}>
+                    Error de Condición
+                </label>
+            </div>
+            <small>Error absoluto: |x_n - x_(n-1)|, Error relativo: |x_n - x_(n-1)|/|x_n|, Error de condición: |f(x_n)|</small>
         </div>
 
         <div class="checkbox-group">
@@ -192,6 +209,10 @@
     {% if resultado %}
     <div class="mensaje success">
         <p>{{ mensaje }}</p>
+        <a href="{% url 'capitulo1:generar_pdf' %}" 
+           style="display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #e74c3c; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            📄 Descargar Informe en PDF
+        </a>
     </div>
 
     <h3>Tabla de iteraciones</h3>
@@ -232,24 +253,38 @@
                 <th>Raíz (xs)</th>
                 <th>Iteraciones (n)</th>
                 <th>Error</th>
+                <th>Estado</th>
             </tr>
         </thead>
         <tbody>
             {% for res in resultados_comparativos %}
-            <tr>
+            <tr {% if res.mejor %}style="background-color: #d4edda; font-weight: bold;"{% endif %}>
                 <td>{{ res.metodo }}</td>
                 <td>{{ res.xs }}</td>
                 <td>{{ res.n }}</td>
                 <td>{{ res.error }}</td>
+                <td>
+                    {% if res.mejor %}
+                        <span style="color: #28a745;">✓ Mejor método</span>
+                    {% elif res.info %}
+                        <span style="color: #dc3545;">{{ res.info }}</span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    <p style="margin-top: 10px; font-size: 13px; color: #6c757d;">
+        <strong>Criterio de selección:</strong> El mejor método es el que converge en menos iteraciones con el menor error.
+    </p>
     {% endif %}
-    {% elif mensaje %}
+    {% else %}
     <div class="mensaje error">
         <p>{{ mensaje }}</p>
     </div>
     {% endif %}
+
 </body>
 </html>

@@ -4,3 +4,5 @@ sympy
 matplotlib
 gunicorn
 whitenoise
+reportlab
+pillow
