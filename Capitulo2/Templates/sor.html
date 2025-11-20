@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load index_filters %}
+
+{% block title %}Método SOR{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+    <h2 class="mb-4">Método SOR</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        
+        <div class="mb-3">
+            <label class="fw-bold">Tamaño de la matriz A (n × n)</label>
+            <input type="number" name="matrix_size" min="2" value="{{ matrix_size }}" class="form-control">
+        </div>
+
+        <hr>
+
+        
+        <h5 class="fw-bold mb-3">Matriz A</h5>
+
+        {% for i in range %}
+            <div class="row mb-2">
+                {% for j in range %}
+                    <div class="col">
+                        <input 
+                            type="text" 
+                            step="any"
+                            class="form-control"
+                            name="a_{{ i }}_{{ j }}"
+                            value="{% if A %}{{ A|index:i|index:j }}{% endif %}">
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        <hr>
+
+        
+        <h5 class="fw-bold mb-3">Vector b</h5>
+
+        <div class="row mb-3">
+            {% for i in range %}
+                <div class="col">
+                    <input 
+                        type="text"
+                        class="form-control"
+                        name="b_{{ i }}"
+                        value="{% if b %}{{ b|index:i }}{% endif %}">
+                </div>
+            {% endfor %}
+        </div>
+
+        <hr>
+
+        
+        <h5 class="fw-bold mb-3">x₀ (Aproximación inicial)</h5>
+
+        <div class="row mb-3">
+            {% for i in range %}
+                <div class="col">
+                    <input 
+                        type="text"
+                        class="form-control"
+                        name="x0_{{ i }}"
+                        value="{% if x0 %}{{ x0|index:i }}{% endif %}">
+                </div>
+            {% endfor %}
+        </div>
+
+        <hr>
+
+        
+        <div class="row mb-3">
+            <div class="col">
+                <label class="fw-bold">Tolerancia</label>
+                <input type="text" name="tol" class="form-control" value="{{ tol|default:'1e-7' }}">
+            </div>
+
+            <div class="col">
+                <label class="fw-bold">Iteraciones máximas</label>
+                <input type="number" name="niter" value="{{ niter|default:'100' }}" class="form-control">
+            </div>
+
+            <div class="col">
+                <label class="fw-bold">Factor de Relajación (w)</label>
+                <input type="text" name="w" class="form-control" value="{{ w|default:'1.1' }}">
+            </div>
+        </div>
+
+        
+        <div class="row mb-4">
+
+            <div class="col text-center">
+                <input type="checkbox" name="usar_cifras" {% if usar_cifras %}checked{% endif %}>
+                <label>Usar error relativo</label>
+            </div>
+
+            <div class="col text-center">
+                <input type="checkbox" name="comparar">
+                <label>Comparar con otros métodos</label>
+            </div>
+
+            <div class="col text-center">
+                <input type="checkbox" name="pdf">
+                <label>Generar informe PDF</label>
+            </div>
+        </div>
+
+        <button class="btn btn-primary px-4">Calcular</button>
+
+    </form>
+
+    <hr class="my-4">
+
+    {% if mensaje %}
+        <div class="alert alert-info">{{ mensaje }}</div>
+    {% endif %}
+
+    {% if tabla %}
+        <h4 class="fw-bold">Tabla de Iteraciones</h4>
+
+        <table class="table table-bordered table-hover mt-3">
+            <thead class="table-dark">
+                <tr>
+                    <th>Iteración</th>
+                    <th>Vector x</th>
+                    <th>Error</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fila in tabla %}
+                    <tr>
+                        <td>{{ fila.0 }}</td>
+                        <td>{{ fila.1 }}</td>
+                        <td>{{ fila.2 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+</div>
+
+{% endblock %}

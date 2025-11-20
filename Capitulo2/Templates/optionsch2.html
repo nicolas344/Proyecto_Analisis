@@ -31,9 +31,9 @@
                     <div class="card-body p-4">
                         <h3 class="text-dark mb-3">Introducción</h3>
                         <p class="text-muted mb-0">
-                            Este capítulo estudia los métodos iterativos Jacobi, Gauss-Seidel y SOR para resolver
-                            sistemas lineales del tipo Ax = b. Son métodos ideales para matrices grandes, dispersas o
-                            difíciles de resolver mediante técnicas directas.
+                            En este capítulo trabajamos con métodos iterativos para resolver sistemas lineales del tipo
+                            <strong>Ax = b</strong>. Podrás experimentar con los métodos de Jacobi, Gauss-Seidel y SOR,
+                            comparar su comportamiento y analizar su convergencia.
                         </p>
                     </div>
                 </div>
@@ -49,9 +49,12 @@
                     <div class="card-body p-4">
                         <h5 class="card-title text-primary mb-3">Método de Jacobi</h5>
                         <p class="card-text text-muted mb-3">
-                            Utiliza la diagonal de A para generar aproximaciones sucesivas.
+                            Utiliza la diagonal de la matriz A para construir aproximaciones sucesivas del vector solución.
+                            Es sencillo de implementar y sirve como base para otros métodos iterativos.
                         </p>
-                        <a href="{% url 'capitulo2:jacobi' %}" class="btn btn-outline-primary">Usar Método</a>
+                        <a href="{% url 'capitulo2:jacobi' %}" class="btn btn-outline-primary">
+                            Usar Método
+                        </a>
                     </div>
                 </div>
             </div>
@@ -62,9 +65,12 @@
                     <div class="card-body p-4">
                         <h5 class="card-title text-primary mb-3">Gauss-Seidel</h5>
                         <p class="card-text text-muted mb-3">
-                            Mejora Jacobi usando valores actualizados en cada iteración.
+                            Variante mejorada de Jacobi que usa inmediatamente los valores actualizados en cada iteración,
+                            logrando normalmente una convergencia más rápida.
                         </p>
-                        <a href="{% url 'capitulo2:gauss_seidel' %}" class="btn btn-outline-primary">Usar Método</a>
+                        <a href="{% url 'capitulo2:gauss_seidel' %}" class="btn btn-outline-primary">
+                            Usar Método
+                        </a>
                     </div>
                 </div>
             </div>
@@ -73,11 +79,14 @@
             <div class="col-lg-4 col-md-6">
                 <div class="card h-100 border-0 shadow-sm">
                     <div class="card-body p-4">
-                        <h5 class="card-title text-primary mb-3">SOR</h5>
+                        <h5 class="card-title text-primary mb-3">SOR (Successive Over-Relaxation)</h5>
                         <p class="card-text text-muted mb-3">
-                            Acelera Gauss-Seidel utilizando un factor de relajación ω.
+                            Acelera el método de Gauss-Seidel usando un factor de relajación <strong>ω</strong>. 
+                            Permite mejorar la velocidad de convergencia cuando se elige adecuadamente dicho factor.
                         </p>
-                        <a href="{% url 'capitulo2:sor' %}" class="btn btn-outline-primary">Usar Método</a>
+                        <a href="{% url 'capitulo2:sor' %}" class="btn btn-outline-primary">
+                            Usar Método
+                        </a>
                     </div>
                 </div>
             </div>

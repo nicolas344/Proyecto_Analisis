@@ -4,6 +4,8 @@
 {% block title %}Inicio - Análisis Numérico{% endblock %}
 
 {% block content %}
+
+
 <div class="hero-section bg-primary text-white py-5 mb-3 mt-1">
     <div class="container text-center">
         <h1 class="display-4 fw-bold mb-3">
@@ -16,6 +18,7 @@
     </div>
 </div>
 
+
 <div class="container" id="capitulos">
     <div class="row">
         <div class="col-12 text-center mb-5">
@@ -25,7 +28,8 @@
     </div>
     
     <div class="row g-4">
-        <!-- Capítulo 1 -->
+
+        
         <div class="col-lg-4 col-md-6">
             <div class="card h-100 shadow-sm border-0 card-hover">
                 <div class="card-header bg-success text-white text-center">
@@ -49,32 +53,32 @@
                 </div>
             </div>
         </div>
+
         
-        <!-- Capítulo 2 -->
         <div class="col-lg-4 col-md-6">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-header bg-secondary text-white text-center">
+            <div class="card h-100 shadow-sm border-0 card-hover">
+                <div class="card-header bg-primary text-white text-center">
                     <i class="fas fa-table fa-2x mb-2"></i>
                     <h5 class="mb-0">Capítulo 2</h5>
                 </div>
                 <div class="card-body d-flex flex-column">
-                    <h6 class="card-title">Próximamente</h6>
+                    <h6 class="card-title">Métodos Iterativos para Sistemas Lineales</h6>
                     <p class="card-text flex-grow-1">
-                        Este capítulo estará disponible pronto con nuevos métodos numéricos.
+                        Jacobi, Gauss-Seidel y SOR para resolver sistemas de ecuaciones lineales Ax = b.
                     </p>
                     <div class="mb-3">
                         <small class="text-muted">
-                            <i class="fas fa-clock"></i> En desarrollo
+                            <i class="fas fa-tools"></i> 3 métodos disponibles
                         </small>
                     </div>
-                    <button class="btn btn-secondary" disabled>
-                        <i class="fas fa-lock"></i> Próximamente
-                    </button>
+                    <a href="{% url 'capitulo2:optionsch2' %}" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Comenzar
+                    </a>
                 </div>
             </div>
         </div>
+
         
-        <!-- Capítulo 3 -->
         <div class="col-lg-4 col-md-6">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-header bg-secondary text-white text-center">
@@ -97,6 +101,8 @@
                 </div>
             </div>
         </div>
+
     </div>
 </div>
+
 {% endblock %}
