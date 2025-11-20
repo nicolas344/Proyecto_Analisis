@@ -6,7 +6,7 @@ from .graph import graficar
 
 # Create your views here.
 def optionsch3(request):
-    return render(request, 'optionsch3.html')
+    return render(request, 'capitulo3_index.html')
 
 def vandermonde_view(request):
     if request.method == 'POST':

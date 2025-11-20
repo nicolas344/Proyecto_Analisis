@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Capítulo 3: Interpolación{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header del capítulo -->
+    <div class="row bg-dark text-white py-5 mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-6 mb-2">Capítulo 3</h1>
+            <p class="lead mb-0">Interpolación Polinomial</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+                <li class="breadcrumb-item active">Capítulo 3</li>
+            </ol>
+        </nav>
+        
+        <!-- Introducción -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card border-0 bg-light">
+                    <div class="card-body p-4">
+                        <h3 class="text-dark mb-3">Introducción</h3>
+                        <p class="text-muted mb-0">
+                            Métodos numéricos para encontrar un polinomio que pase por un conjunto de puntos dados. 
+                            Estos algoritmos son fundamentales para aproximar funciones y analizar datos discretos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Métodos disponibles -->
+        <div class="row g-4">
+            <!-- Vandermonde -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title text-primary mb-3">Vandermonde</h5>
+                        <p class="card-text text-muted mb-3">
+                            Encuentra el polinomio interpolante resolviendo el sistema Ax=b usando la matriz de Vandermonde.
+                        </p>
+                        <a href="{% url 'capitulo3:vandermonde' %}" class="btn btn-outline-primary">
+                            Usar Método
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Newton Interpolante -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title text-primary mb-3">Newton Interpolante</h5>
+                        <p class="card-text text-muted mb-3">
+                            Utiliza diferencias divididas para construir el polinomio de interpolación de forma eficiente.
+                        </p>
+                        <a href="{% url 'capitulo3:newton_int' %}" class="btn btn-outline-primary">
+                            Usar Método
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lagrange -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title text-primary mb-3">Lagrange</h5>
+                        <p class="card-text text-muted mb-3">
+                            Construye el polinomio como una combinación lineal de polinomios base de Lagrange.
+                        </p>
+                        <a href="{% url 'capitulo3:lagrange' %}" class="btn btn-outline-primary">
+                            Usar Método
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Splines -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title text-primary mb-3">Splines (Trazadores)</h5>
+                        <p class="card-text text-muted mb-3">
+                            Interpolación por tramos usando polinomios de bajo grado (lineales o cúbicos).
+                        </p>
+                        <a href="{% url 'capitulo3:spline' %}" class="btn btn-outline-primary">
+                            Usar Método
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
